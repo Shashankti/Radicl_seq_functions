@@ -171,12 +171,12 @@ cor.test(merged_runs_b2b$frag.length, merged_runs_b2b$count,
 
 #check non-b2b without cis
 cor.test(merged_runs_non_b2b[target.chr==bait.chr]$bait.length,
-         merged_run_non_b2b[target.chr==bait.chr]$q.value,
+         merged_runs_non_b2b[target.chr==bait.chr]$q.value,
          method="spearman",exact=F)
 
 
 cor.test(merged_runs_non_b2b[target.chr==bait.chr]$bait.length,
-         merged_run_non_b2b[target.chr==bait.chr]$count,
+         merged_runs_non_b2b[target.chr==bait.chr]$count,
          method="spearman",exact=F)
 
 
@@ -261,7 +261,6 @@ plt_non_b2b_frag <-
   geom_boxplot(width=0.1, outlier.shape = NA)+
   theme_cowplot()+
   scale_fill_viridis(discrete = T,alpha = 0.5)+
-  theme(legend.position = "none")+
   ylab("Log 10 length")+
   xlab("Significant Interaction")+
   ggtitle("Fragment length Non-bait-to-bait interactions")+
@@ -276,13 +275,13 @@ plt_non_b2b_bait <-
   geom_boxplot(width=0.1,outlier.shape = NA)+
   theme_cowplot()+
   scale_fill_viridis(discrete = T,alpha = 0.5)+
-  theme(legend.position = "none")=
+  theme(legend.position = "none")+
   ylab("Log 10 Length") + 
   xlab("Significant Interaction")+
   ggtitle("Bait length non-bait-to-bait interactions")+
   theme(plot.title = element_text(size=10))
 
-plt_non_b2b_frag <- 
+plt_b2b_frag <- 
   ggplot(merged_runs_b2b,
          aes(x=signif,y=log(frag.length,base = 10),fill=signif))+
   geom_violin(trim = FALSE,outlier.shape=NA)+
@@ -295,7 +294,7 @@ plt_non_b2b_frag <-
   ggtitle("Fragment Length Bait-to-bait interactions")+
   theme(plot.title = element_text(size = 10))
 
-plt_non_b2b_bait <- 
+plt_b2b_bait <- 
   ggplot(merged_runs_b2b,
          aes(x=signif,y=log(bait.length,base = 10),fill=signif))+
   geom_violin(trim = FALSE,outlier.shape=NA)+
