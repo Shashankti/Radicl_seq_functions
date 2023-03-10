@@ -1,0 +1,488 @@
+---
+title: "Analysis of MeDip-Seq data"
+author: "Shashank Tiwari"
+date: "Most recent update:<br> `r Sys.Date()`"
+output: 
+  rmarkdown::html_document: 
+    theme: spacelab
+    highlight: zenburn 
+    code_folding: show 
+    toc: true 
+    toc_float: true
+    smooth_scroll: true
+    number_sections: false 
+    self_contained: true 
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=T, message=F}
+#root.dir <- here::here()
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  #root.dir = root.dir
+  fig.height = 6,
+  fig.width = 7.00787 #178mm
+)  
+knitr::opts_knit$set(#root.dir = root.dir, 
+                     dpi = 350)  
+library(data.table)
+library(ggplot2)
+library(tidyverse)
+library(cowplot)
+library(Rsamtools)
+library(rtracklayer)
+library(viridis)
+library(dplyr)
+library(genomation)
+library(biomaRt)
+library(GenomicRanges)
+library(DT)
+library(magick)
+library(patchwork)
+library(slickR)
+library(svglite)
+#library(ggpubr)
+```
+
+```{r,echo=FALSE}
+load("~/Radicl_Seq/running_chicane.RData")
+
+qc_check <- function(significant_results){
+  #check propportion by interaction type
+  total <- nrow(significant_results)
+  trans.prop <- sum(is.na(significant_results$distance))/total
+  cis.prop <- sum(!is.na(significant_results$distance))/total
+  b2b.prop <- sum(significant_results$bait.to.bait)/total
+  int.data <- c('trans' = trans.prop*100, 'cis' = cis.prop*100,  'bait.to.bait' = b2b.prop*100)
+  print(int.data)
+}
+
+qc_df <- lapply(list(chicane.results_ctrl1, chicane.results_ctrl2,chicane.results_ICM1,chicane.results_ICM2,
+                     significant.results.ctrl1,significant.results.ctrl2,significant.results.ICM1,significant.results.ICM2),
+                qc_check)
+qc_df <- as.data.frame(qc_df)
+Types <- rep(c("Ctrl Rep1", "Ctrl Rep2","ICM Rep1","ICM Rep2"),2)
+colnames(qc_df) <- Types
+
+
+```
+
+
+
+```{r}
+sktech = htmltools::withTags(table(
+  class = 'display',
+  thead(
+    tr(
+      th(rowspan = 2, 'Percent'),
+      th(colspan = 5, 'All'),
+      th(colspan = 5, 'Signif')
+    ),
+    tr(
+      lapply( rep(c("Ctrl Rep1", "Ctrl Rep2","ICM Rep1","ICM Rep2"),2), th)
+    )
+  )
+))
+
+DT::datatable(qc_df, container = sktech, rownames = TRUE,options = list(scrollX=TRUE))
+
+
+```
+
+
+## Preprocessing 
+
+```{r}
+#read in the data
+chicane.results_ctrl1$type <- as.factor("Ctrl Rep1")
+chicane.results_ctrl2$type <- as.factor("Ctrl Rep2")
+chicane.results_ICM1$type <- as.factor("ICM Rep1")
+chicane.results_ICM2$type <- as.factor("ICM Rep2")
+merged_runs <- rbind(chicane.results_ctrl1, chicane.results_ctrl2,
+                     chicane.results_ICM1,chicane.results_ICM2)
+merged_runs$signif <- ifelse(merged_runs$q.value<0.05, "significant","non-significant")
+merged_runs$frag.length <- merged_runs$target.end-merged_runs$target.start
+merged_runs$bait.length <- merged_runs$bait.end-merged_runs$bait.start
+
+
+#make bins split res by qvalue bins
+merged_runs[,q_bin:=cut(q.value, breaks=c(0,0.05,0.2,0.4,0.6,0.8,1))]
+merged_stretch_cis <- merged_runs[!is.na(distance),.(count2=1:count),names(merged_runs)] 
+
+
+
+#get gene names
+baits <- fread("~/Radicl_Seq/Gene_locations_no_ovrlps.bed")
+colnames(baits) <- c("chr","start","end","bait_name")
+```
+
+
+```{r,echo=FALSE}
+rm(chicane.results_ctrl1,chicane.results_ctrl2,chicane.results_ICM1,chicane.results_ICM2)
+rm(significant.results.ctrl1,significant.results.ctrl2,significant.results.ICM1,significant.results.ICM2)
+gc()
+```
+
+## Relationship between RNA length and detected interactions 
+
+```{r}
+merged_runs[,bait_name := baits$bait_name[match(merged_runs$bait.start,baits$start)]]
+merged_runs_non_b2b <- merged_runs[bait.to.bait==FALSE]
+merged_runs_b2b <- merged_runs[bait.to.bait==TRUE]
+setorder(merged_runs_non_b2b,q.value)
+
+#make correlation test
+cor.test(merged_runs_non_b2b$bait.length,merged_runs_non_b2b$q.value,
+         method="spearman", exact = F)
+
+
+cor.test(merged_runs_non_b2b$bait.length, merged_runs_non_b2b$count,
+         method="spearman", exact = F)
+
+
+nrow(merged_runs_non_b2b[frag.length==1999])/nrow(merged_runs_non_b2b)
+
+cor.test(merged_runs_non_b2b$frag.length, merged_runs_non_b2b$count,
+         method="spearman",exact = F)
+
+
+cor.test(merged_runs_non_b2b$frag.length, merged_runs_non_b2b$q.value,
+         method="spearman",exact=F)
+
+
+cor.test(merged_runs_non_b2b[frag.length!=1999]$frag.length,
+         merged_runs_non_b2b[frag.length!=1999]$count,
+         method="spearman",exact=F)
+
+
+cor.test(merged_runs_non_b2b[frag.length!=1999]$frag.length,
+         merged_runs_non_b2b[frag.length!=1999]$q.value,
+         method="spearman",exact=F)
+
+
+#check bait to bait
+cor.test(merged_runs_b2b$frag.length, merged_runs_b2b$q.value,
+         method="spearman",exact=F)
+
+cor.test(merged_runs_b2b$frag.length, merged_runs_b2b$count,
+         method="spearman",exact=F)
+
+#check non-b2b without cis
+cor.test(merged_runs_non_b2b[target.chr==bait.chr]$bait.length,
+         merged_run_non_b2b[target.chr==bait.chr]$q.value,
+         method="spearman",exact=F)
+
+
+cor.test(merged_runs_non_b2b[target.chr==bait.chr]$bait.length,
+         merged_run_non_b2b[target.chr==bait.chr]$count,
+         method="spearman",exact=F)
+
+
+#raw pvalue
+cor.test(merged_runs_non_b2b[frag.length!=1999]$frag.length,
+         merged_runs_non_b2b[frag.length!=1999]$p.value,
+         method="spearman",exact=F)
+
+
+cor.test(merged_runs_non_b2b$frag.length,merged_runs_non_b2b$p.value,
+         method="spearman",exact=F)
+
+#summarised counts per fragment
+bait_count <- merged_runs_non_b2b[,sum(count),by=.(bait.id,bait.length)]
+merged_runs_sum_non_b2b <- 
+  cor.test(bait_count$bait.length,bait_count$V1,
+           method="spearman",exact=F)
+frag_count <- merged_runs_non_b2b[,sum(count),by=.(target.id,frag.length)]
+cor.test(frag_count$frag.length,frag_count$V1,
+         method="spearman",exact=F)
+
+#bait to bait interactions
+bait_count2 <- merged_runs_b2b[,sum(count),by=.(bait.id,bait.length)]
+merged_run_sum_frag_b2b <- 
+  cor.test(bait_count2$bait.length,bait_count2$V1,
+           method="spearman",exact=F)
+```
+
+
+
+
+```{r}
+
+#Print summarized counts by bait where it wasnt bait to bait
+
+print(merged_runs_sum_non_b2b)
+
+
+#Print summ counts by bait where it is bait to bait
+
+print(merged_run_sum_frag_b2b)
+```
+
+Trying wilcoxons test
+
+```{r}
+#non bait to bait
+non_b2b_bait_wt <-
+  wilcox.test(merged_runs_non_b2b[q.value<0.05]$bait.length,
+              merged_runs_non_b2b[q.value>=0.05]$bait.length,
+              alternative="greater")
+
+non_b2b_frag_wt <- 
+  wilcox.test(merged_runs_non_b2b[q.value<0.05]$frag.length,
+              merged_runs_non_b2b[q.value>=0.05]$frag.length,
+              alternative="greater")
+
+##bait to bait
+b2b_bait_wt <-
+  wilcox.test(merged_runs_b2b[q.value<0.05]$bait.length,
+              merged_runs_b2b[q.value>=0.05]$bait.length,
+              alternative="greater")
+
+b2b_frag_wt <- 
+  wilcox.test(merged_runs_b2b[q.value<0.05]$frag.length,
+              merged_runs_b2b[q.value>=0.05]$frag.length,
+              alternative="greater")
+
+print(non_b2b_bait_wt)
+print(non_b2b_frag_wt)
+print(b2b_bait_wt)
+print(b2b_frag_wt)
+```
+
+Show the plot and results
+
+```{r}
+plt_non_b2b_frag <- 
+  ggplot(merged_runs_non_b2b,
+         aes(x=signif,y=log(frag.length,base = 10),fill=signif))+
+  geom_violin(trim = FALSE,outlier.shape=NA)+
+  geom_boxplot(width=0.1, outlier.shape = NA)+
+  theme_cowplot()+
+  scale_fill_viridis(discrete = T,alpha = 0.5)+
+  theme(legend.position = "none")+
+  ylab("Log 10 length")+
+  xlab("Significant Interaction")+
+  ggtitle("Fragment length Non-bait-to-bait interactions")+
+  theme(plot.title = element_text(size=10))+
+  coord_cartesian(ylim = quantile(log(merged_runs_non_b2b$frag.length,base = 10),
+                                  c(0.1,0.9)))
+
+plt_non_b2b_bait <-
+  ggplot(merged_runs_non_b2b,
+         aes(x=signif,y=log(bait.length,base=10),fill=signif))+
+  geom_violin(trim = FALSE,outlier.shape=NA)+
+  geom_boxplot(width=0.1,outlier.shape = NA)+
+  theme_cowplot()+
+  scale_fill_viridis(discrete = T,alpha = 0.5)+
+  theme(legend.position = "none")=
+  ylab("Log 10 Length") + 
+  xlab("Significant Interaction")+
+  ggtitle("Bait length non-bait-to-bait interactions")+
+  theme(plot.title = element_text(size=10))
+
+plt_non_b2b_frag <- 
+  ggplot(merged_runs_b2b,
+         aes(x=signif,y=log(frag.length,base = 10),fill=signif))+
+  geom_violin(trim = FALSE,outlier.shape=NA)+
+  geom_boxplot(width=0.1,outlier.shape = NA)+
+  theme_cowplot()+
+  scale_fill_viridis(discrete = T,alpha=0.5)+
+  theme(legend.position = "none")+
+  ylab("Log 10 Length")+
+  xlab("Significant Interaction")+
+  ggtitle("Fragment Length Bait-to-bait interactions")+
+  theme(plot.title = element_text(size = 10))
+
+plt_non_b2b_bait <- 
+  ggplot(merged_runs_b2b,
+         aes(x=signif,y=log(bait.length,base = 10),fill=signif))+
+  geom_violin(trim = FALSE,outlier.shape=NA)+
+  geom_boxplot(width=0.1,outlier.shape = NA)+
+  theme_cowplot()+
+  scale_fill_viridis(discrete = T,alpha = 0.5)+
+  theme(legend.position = "none")+
+  ylab("Log 10 Length")+
+  xlab("Significant Interactions")+
+  ggtitle("Bait length bait-to-bait interactions")+
+  theme(plot.title = element_text(size=10))
+  
+
+gridExtra::grid.arrange(plt_non_b2b_frag,plt_non_b2b_bait,
+                          plt_b2b_frag,plt_b2b_bait,ncol=2)
+
+```
+
+
+## Distance of interactions from Transcriptional start site
+
+```{r}
+ggplot(merged_stretch_cis, aes(log(distance,base=10))) +
+    geom_density(alpha = 0.1)+theme_cowplot()+
+    scale_fill_viridis(name="Adj. P-value Bin",discrete=T)+
+    scale_colour_viridis(name="Adj. P-value Bin",discrete=T)+
+    geom_vline(xintercept=log(24000000,base=10), colour="grey") +
+    geom_vline(xintercept=log(500000,base=10), colour="grey") +
+    annotate(x=log(24000000,base=10),y=2,label="24Mb",vjust=2,geom="label")+
+    annotate(x=log(500000,base=10),y=2,label="500Kb",vjust=2,geom="label")+
+    xlab("Log 10 Distance from Interaction to RNA")+
+  facet_wrap(~type)
+
+```
+
+Split the plot according to the Replicate type and next according to the p value
+
+```{r}
+
+ggplot(merged_stretch_cis,aes(log(distance,base = 10),
+                              fill=q_bin,colour=q_bin))+
+  geom_density(alpha=0.1) + theme_cowplot() +
+  facet_wrap(~type)+
+  scale_fill_viridis(name="Adj P-value bin", discrete=T)+
+  scale_colour_viridis(name="Adj P-value bin", discrete=T)+
+  geom_vline(xintercept = log(24000000,base = 10), colour="grey")+
+  geom_vline(xintercept = log(500000,base = 10), colour="grey") +
+  annotate(x=log(24000000,base = 10), y=2, label="24Mb",vjust=2,geom = "label") +
+  annotate(x=log(500000,base = 10), y=2, label="500kb",vjust=2,geom = "label") +
+  xlab("Log 10 Distance from interaction to RNA")
+
+```
+Normalizing the plot for RNA distance
+
+
+
+```{r}
+merged_stretch_cis[,stnd_dist:=distance/bait.length]
+
+
+ggplot(merged_stretch_cis, aes(log(stnd_dist,base=10))) +
+    geom_density(alpha = 0.1)+theme_cowplot()+
+  facet_wrap(~type)+
+    scale_fill_viridis(name="Adj. P-value Bin",discrete=T)+
+    scale_colour_viridis(name="Adj. P-value Bin",discrete=T)+
+    geom_vline(xintercept=log(1,base=10), colour="grey") +
+    geom_vline(xintercept=log(120,base=10), colour="grey") +
+    annotate(x=log(3,base=10),y=.8,label="RNA Length",vjust=2,geom="label")+
+    annotate(x=log(400,base=10),y=.8,label="120x RNA Length",vjust=2,
+             geom="label")+
+    xlab("Log 10 Distance from Interaction to RNA of RNA Length")
+
+```
+
+
+
+
+
+## Coding vs Non-coding RNAs
+
+```{r}
+#add cis and trans interactions
+merged_runs[is.na(distance), interaction:="trans"]
+merged_runs[!is.na(distance),interaction:="cis"]
+
+#add in gene type 
+genes <- unique(merged_runs$bait_name)
+
+mart <- useMart("ENSEMBL_MART_ENSEMBL", host = "https://asia.ensembl.org")
+mart <- useDataset("hsapiens_gene_ensembl", mart)
+annotLookup <- getBM(
+  mart = mart,
+  attributes = c(
+    "hgnc_symbol",
+    "entrezgene_id",
+    "ensembl_gene_id",
+    "gene_biotype"),
+  filter = "hgnc_symbol",
+  values = genes,
+  uniqueRows=TRUE,
+  useCache = FALSE)
+
+annotLookup <- as.data.table(annotLookup)
+
+#gene_biotype
+setnames(annotLookup,
+         c("bait_name","entrezgene_id","ensembl_gene_id","gene_biotype"))
+
+setkey(merged_runs,bait_name)
+setkey(annotLookup, bait_name)
+merged_runs[annotLookup, gene_biotype:= i.gene_biotype]
+#clear memory
+rm(genes,annotLookup,mart,baits)
+res_biotyp <- merged_runs[!is.na(gene_biotype),]
+```
+Protein type
+
+
+```{r}
+res_biotyp[grepl( "protein_coding", gene_biotype),gene_biotype_hl:="pcRNA"]
+res_biotyp[grepl( "pseudogene", gene_biotype),gene_biotype_hl:="pseudogene"]
+res_biotyp[grepl( "TR_", gene_biotype),gene_biotype_hl:="TR_gene"]
+res_biotyp[grepl( "TEC", gene_biotype),gene_biotype_hl:=gene_biotype]
+res_biotyp[gene_biotype %in% c("miRNA","miscRNA","piRNA","rRNA","siRNA","snRNA",
+                                "snoRNA","tRNA","vaultRNA","lncRNA","misc_RNA",
+                                "scaRNA"),
+           gene_biotype_hl:="ncRNA"]
+res_biotyp[grepl( "Mt_", gene_biotype),gene_biotype_hl:="Mt_RNA"]
+res_biotyp[gene_biotype=="ribozyme",gene_biotype_hl:=gene_biotype]
+res_biotyp[gene_biotype=="scRNA",gene_biotype_hl:=gene_biotype]
+res_biotyp[grepl( "IG_", gene_biotype),gene_biotype_hl:="IG_gene"]
+#update naming to pcRNA
+res_biotyp[gene_biotype=="protein_coding",gene_biotype:="pcRNA"]
+```
+
+
+```{r}
+ggplot(res_biotyp[q.value<0.05,],
+        aes(x=gene_biotype_hl,fill=gene_biotype_hl)) +
+    geom_bar()+
+    theme_cowplot()+
+  facet_wrap(~type)+
+    scale_fill_viridis(discrete=T)+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position="none")+
+    xlab("")+
+    ylab("Number of significant interactions")
+```
+
+Proportion of cis coding/non coding interactions
+
+
+```{r}
+merged_counts <- res_biotyp[q.value<0.05, .N, by=.(interaction,gene_biotype_hl, type)]
+merged_counts[,all_N :=sum(N), by=.(interaction, type)]
+merged_counts[,prop:=(N/all_N)]
+plot1 <- ggplot(merged_counts[type %in% c("Ctrl Rep1","Ctrl Rep2")],aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
+    geom_bar(stat="identity")+
+    facet_wrap(~interaction)+
+    theme_cowplot()+
+    scale_fill_viridis(discrete=T)+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position="none")+
+    xlab("")+
+    ylab("Proportion ")
+
+plot2 <- ggplot(merged_counts[type %in% c("ICM Rep1","ICM Rep2")],aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
+    geom_bar(stat="identity")+
+    facet_wrap(~interaction)+
+    theme_cowplot()+
+    scale_fill_viridis(discrete=T)+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position="none")+
+    xlab("")+
+    ylab("Proportion ")
+plot_grid(plot1,plot2, labels = c("Control","ICM"), nrow = 2)
+```
+
+
+```{r, out.height='100%'}
+ggplot(merged_counts,aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
+    geom_bar(stat="identity")+
+    facet_wrap(type~interaction, nrow = 4)+
+    theme_cowplot()+
+    scale_fill_viridis(discrete=T)+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.position="none")+
+    xlab("")+
+    ylab("Proportion of significant cis/trans Interactions")
+```
