@@ -1,0 +1,11 @@
+name: "Chicane-analysis"
+output_dir: "."
+navbar:
+  title: "Chicane-analysis"
+  left:
+    - text: "Default"
+      href: index.html
+    - text: "Noncoding split"
+      href: coding.html
+    - text: "RNA length Normalised"
+      href: norm.html

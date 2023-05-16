@@ -1,5 +1,5 @@
 ---
-title: "Analysis of MeDip-Seq data"
+title: "Splitting coding and noncoding data"
 author: "Shashank Tiwari"
 date: "Most recent update:<br> `r Sys.Date()`"
 output: 
@@ -47,7 +47,7 @@ library(svglite)
 ```
 
 ```{r,echo=FALSE}
-load("~/Radicl_Seq/running_chicane.RData")
+load("~/Radicl_Seq/multi_bin_coding_nc.RData")
 
 qc_check <- function(significant_results){
   #check propportion by interaction type
@@ -59,11 +59,11 @@ qc_check <- function(significant_results){
   print(int.data)
 }
 
-qc_df <- lapply(list(chicane.results_ctrl1, chicane.results_ctrl2,chicane.results_ICM1,chicane.results_ICM2,
-                     significant.results.ctrl1,significant.results.ctrl2,significant.results.ICM1,significant.results.ICM2),
+qc_df <- lapply(list(control_coding_2kb,control_nc_2kb, ICM_coding_2kb, ICM_nc_2kb,significant.results.ctrl_coding_2kb,
+                     significant.results.ctrl_nc_2kb, significant.results.ICM_coding_2kb, significant.results.ICM_nc_2kb),
                 qc_check)
 qc_df <- as.data.frame(qc_df)
-Types <- rep(c("Ctrl Rep1", "Ctrl Rep2","ICM Rep1","ICM Rep2"),2)
+Types <- rep(c("Ctrl Coding", "Ctrl Noncoding","ICM Coding","ICM Noncoding"),2)
 colnames(qc_df) <- Types
 
 
@@ -96,19 +96,20 @@ DT::datatable(qc_df, container = sktech, rownames = TRUE,options = list(scrollX=
 
 ```{r}
 #read in the data
-chicane.results_ctrl1$type <- as.factor("Ctrl Rep1")
-chicane.results_ctrl2$type <- as.factor("Ctrl Rep2")
-chicane.results_ICM1$type <- as.factor("ICM Rep1")
-chicane.results_ICM2$type <- as.factor("ICM Rep2")
-merged_runs <- rbind(chicane.results_ctrl1, chicane.results_ctrl2,
-                     chicane.results_ICM1,chicane.results_ICM2)
+control_coding_2kb$type <- as.factor("Control Coding")
+control_nc_2kb$type <- as.factor("Control NonCoding")
+ICM_coding_2kb$type <- as.factor("ICM Coding")
+ICM_nc_2kb$type <- as.factor("ICM NonCoding")
+merged_runs <- rbind(control_coding_2kb, control_nc_2kb,
+                     ICM_coding_2kb, ICM_nc_2kb)
 merged_runs$signif <- ifelse(merged_runs$q.value<0.05, "significant","non-significant")
 merged_runs$frag.length <- merged_runs$target.end-merged_runs$target.start
 merged_runs$bait.length <- merged_runs$bait.end-merged_runs$bait.start
 
 
 #make bins split res by qvalue bins
-merged_runs[,q_bin:=cut(q.value, breaks=c(0,0.05,0.2,0.4,0.6,0.8,1))]
+merged_runs <- merged_runs[!is.na(merged_runs$q.value),]
+merged_runs[,q_bin:=cut(q.value, breaks=c(0,0.05,0.2,0.4,0.6,0.8,1),include.lowest=TRUE),]
 merged_stretch_cis <- merged_runs[!is.na(distance),.(count2=1:count),names(merged_runs)] 
 
 
@@ -120,8 +121,11 @@ colnames(baits) <- c("chr","start","end","bait_name")
 
 
 ```{r,echo=FALSE}
-rm(chicane.results_ctrl1,chicane.results_ctrl2,chicane.results_ICM1,chicane.results_ICM2)
-rm(significant.results.ctrl1,significant.results.ctrl2,significant.results.ICM1,significant.results.ICM2)
+rm(control_coding_2kb,control_nc_2kb,ICM_coding_2kb,ICM_nc_2kb)
+rm(significant.results.ctrl_coding_2kb,significant.results.ctrl_coding_3kb,significant.results.ctrl_coding_5kb,
+   significant.results.ctrl_nc_2kb,significant.results.ctrl_nc_3kb,significant.results.ctrl_nc_5kb,
+   significant.results.ICM_coding_2kb,significant.results.ICM_coding_3kb,significant.results.ICM_coding_5kb,
+   significant.results.ICM_nc_2kb,significant.results.ICM_nc_3kb, significant.results.ICM_nc_5kb)
 gc()
 ```
 
@@ -335,6 +339,7 @@ Split the plot according to the Replicate type and next according to the p value
 
 ```{r}
 
+
 ggplot(merged_stretch_cis,aes(log(distance,base = 10),
                               fill=q_bin,colour=q_bin))+
   geom_density(alpha=0.1) + theme_cowplot() +
@@ -384,7 +389,7 @@ merged_runs[!is.na(distance),interaction:="cis"]
 #add in gene type 
 genes <- unique(merged_runs$bait_name)
 
-mart <- useMart("ENSEMBL_MART_ENSEMBL", host = "https://asia.ensembl.org")
+mart <- useMart("ENSEMBL_MART_ENSEMBL", host = "https://useast.ensembl.org")
 mart <- useDataset("hsapiens_gene_ensembl", mart)
 annotLookup <- getBM(
   mart = mart,
@@ -433,26 +438,29 @@ res_biotyp[gene_biotype=="protein_coding",gene_biotype:="pcRNA"]
 
 
 ```{r}
-ggplot(res_biotyp[q.value<0.05,],
+res_biotyp$control <- ifelse(res_biotyp$type %in% c("Control Coding","Control NonCoding"), "Control","ICM")
+
+ggplot(res_biotyp,
         aes(x=gene_biotype_hl,fill=gene_biotype_hl)) +
     geom_bar()+
     theme_cowplot()+
-  facet_wrap(~type)+
+  facet_wrap(~control)+
     scale_fill_viridis(discrete=T)+
     theme(axis.text.x = element_text(angle = 45, hjust = 1),
             legend.position="none")+
     xlab("")+
-    ylab("Number of significant interactions")
+    ylab("Total Number of interactions")
 ```
 
 Proportion of cis coding/non coding interactions
 
 
 ```{r}
-merged_counts <- res_biotyp[q.value<0.05, .N, by=.(interaction,gene_biotype_hl, type)]
-merged_counts[,all_N :=sum(N), by=.(interaction, type)]
+merged_counts <- res_biotyp[q.value<0.05, .N, by=.(interaction,gene_biotype_hl, control)]
+#merged_counts$control <- ifelse(merged_counts$type %in% c("Control Coding","Control NonCoding"), "Control","ICM")
+merged_counts[,all_N :=sum(N), by=.(interaction, control)]
 merged_counts[,prop:=(N/all_N)]
-plot1 <- ggplot(merged_counts[type %in% c("Ctrl Rep1","Ctrl Rep2")],aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
+plot1 <- ggplot(merged_counts[control %in% c("Control")],aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
     geom_bar(stat="identity")+
     facet_wrap(~interaction)+
     theme_cowplot()+
@@ -462,7 +470,7 @@ plot1 <- ggplot(merged_counts[type %in% c("Ctrl Rep1","Ctrl Rep2")],aes(x=gene_b
     xlab("")+
     ylab("Proportion ")
 
-plot2 <- ggplot(merged_counts[type %in% c("ICM Rep1","ICM Rep2")],aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
+plot2 <- ggplot(merged_counts[control %in% c("ICM")],aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
     geom_bar(stat="identity")+
     facet_wrap(~interaction)+
     theme_cowplot()+
@@ -478,7 +486,7 @@ plot_grid(plot1,plot2, labels = c("Control","ICM"), nrow = 2)
 ```{r, out.height='100%'}
 ggplot(merged_counts,aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
     geom_bar(stat="identity")+
-    facet_wrap(type~interaction, nrow = 4)+
+    facet_wrap(control~interaction, nrow = 2)+
     theme_cowplot()+
     scale_fill_viridis(discrete=T)+
     theme(axis.text.x = element_text(angle = 45, hjust = 1),
