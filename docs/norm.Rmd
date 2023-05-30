@@ -23,7 +23,7 @@ knitr::opts_chunk$set(
   comment = "#>",
   #root.dir = root.dir
   fig.height = 6,
-  fig.width = 7.00787 #178mm
+  fig.width = 8.00787 #178mm
 )  
 knitr::opts_knit$set(#root.dir = root.dir, 
                      dpi = 350)  
@@ -43,11 +43,23 @@ library(magick)
 library(patchwork)
 library(slickR)
 library(svglite)
+library(scales)
 #library(ggpubr)
 ```
 
-```{r,echo=FALSE}
-load("~/Radicl_Seq/running_chicane.RData")
+
+```{r,echo=FALSE, message=FALSE}
+load("~/Radicl_Seq/Norm_bin_coding_nc.RData")
+# control_coding <- data.table::fread("../../2kb/control_coding.txt", header = T, sep = ",")
+# control_nc <- data.table::fread("../../2kb/control_nc.txt")
+# ICM_coding <- data.table::fread("../../2kb/ICM_coding.txt")
+# ICM_nc <- data.table::fread("../../2kb/ICM_nc.txt")
+control_coding <- control_coding_2kb
+control_nc <- control_nc_2kb
+ICM_coding <- ICM_coding_2kb
+ICM_nc <- ICM_nc_2kb
+rm(control_coding_2kb, control_nc_2kb, ICM_coding_2kb, ICM_nc_2kb)
+gc()
 
 qc_check <- function(significant_results){
   #check propportion by interaction type
@@ -55,15 +67,17 @@ qc_check <- function(significant_results){
   trans.prop <- sum(is.na(significant_results$distance))/total
   cis.prop <- sum(!is.na(significant_results$distance))/total
   b2b.prop <- sum(significant_results$bait.to.bait)/total
-  int.data <- c('trans' = trans.prop*100, 'cis' = cis.prop*100,  'bait.to.bait' = b2b.prop*100)
+  int.data <- c('trans' = percent(trans.prop), 'cis' = percent(cis.prop),  'bait.to.bait' = percent(b2b.prop))
   print(int.data)
 }
 
-qc_df <- lapply(list(chicane.results_ctrl1, chicane.results_ctrl2,chicane.results_ICM1,chicane.results_ICM2,
-                     significant.results.ctrl1,significant.results.ctrl2,significant.results.ICM1,significant.results.ICM2),
+qc_df <- lapply(list(control_coding, control_nc,ICM_coding,ICM_nc,
+                     control_coding[control_coding$q.value<0.05,],control_nc[control_nc$q.value<0.05,],
+                     ICM_coding[ICM_coding$q.value<0.05,],
+                     ICM_nc[ICM_nc$q.value<0.05,]),
                 qc_check)
 qc_df <- as.data.frame(qc_df)
-Types <- rep(c("Ctrl Rep1", "Ctrl Rep2","ICM Rep1","ICM Rep2"),2)
+Types <- rep(c("Ctrl Coding", "Ctrl NonCoding","ICM Coding","ICM NonCoding"),2)
 colnames(qc_df) <- Types
 
 
@@ -76,12 +90,12 @@ sktech = htmltools::withTags(table(
   class = 'display',
   thead(
     tr(
-      th(rowspan = 2, 'Percent'),
+      th(rowspan = 2, 'Type'),
       th(colspan = 5, 'All'),
-      th(colspan = 5, 'Signif')
+      th(colspan = 5, 'Significant')
     ),
     tr(
-      lapply( rep(c("Ctrl Rep1", "Ctrl Rep2","ICM Rep1","ICM Rep2"),2), th)
+      lapply( rep(c("Ctrl Coding", "Ctrl NonCoding","ICM Coding","ICM NonCoding"),2), th)
     )
   )
 ))
@@ -96,21 +110,21 @@ DT::datatable(qc_df, container = sktech, rownames = TRUE,options = list(scrollX=
 
 ```{r}
 #read in the data
-chicane.results_ctrl1$type <- as.factor("Ctrl Rep1")
-chicane.results_ctrl2$type <- as.factor("Ctrl Rep2")
-chicane.results_ICM1$type <- as.factor("ICM Rep1")
-chicane.results_ICM2$type <- as.factor("ICM Rep2")
-merged_runs <- rbind(chicane.results_ctrl1, chicane.results_ctrl2,
-                     chicane.results_ICM1,chicane.results_ICM2)
+control_coding$type <- as.factor("Control Coding")
+control_nc$type <- as.factor("Control NonCoding")
+ICM_coding$type <- as.factor("ICM Coding")
+ICM_nc$type <- as.factor("ICM NonCoding")
+merged_runs <- rbind(control_coding, control_nc,
+                     ICM_coding,ICM_nc)
 merged_runs$signif <- ifelse(merged_runs$q.value<0.05, "significant","non-significant")
 merged_runs$frag.length <- merged_runs$target.end-merged_runs$target.start
 merged_runs$bait.length <- merged_runs$bait.end-merged_runs$bait.start
 
 
 #make bins split res by qvalue bins
-merged_runs[,q_bin:=cut(q.value, breaks=c(0,0.05,0.2,0.4,0.6,0.8,1))]
+merged_runs <- merged_runs[!is.na(merged_runs$q.value),]
+merged_runs[,q_bin:=cut(q.value, breaks=c(0,0.05,0.2,0.4,0.6,0.8,1),include.lowest=TRUE),]
 merged_stretch_cis <- merged_runs[!is.na(distance),.(count2=1:count),names(merged_runs)] 
-
 
 
 #get gene names
@@ -120,8 +134,8 @@ colnames(baits) <- c("chr","start","end","bait_name")
 
 
 ```{r,echo=FALSE}
-rm(chicane.results_ctrl1,chicane.results_ctrl2,chicane.results_ICM1,chicane.results_ICM2)
-rm(significant.results.ctrl1,significant.results.ctrl2,significant.results.ICM1,significant.results.ICM2)
+rm(control_coding,control_nc,ICM_coding,ICM_nc)
+rm(significant.results.ctrl_coding_2kb,significant.results.ctrl_nc_2kb,significant.results.ICM_coding_2kb,significant.results.ICM_nc_2kb)
 gc()
 ```
 
@@ -315,6 +329,8 @@ gridExtra::grid.arrange(plt_non_b2b_frag,plt_non_b2b_bait,
 ```
 
 
+
+
 ## Distance of interactions from Transcriptional start site
 
 ```{r}
@@ -369,6 +385,31 @@ ggplot(merged_stretch_cis, aes(log(stnd_dist,base=10))) +
     xlab("Log 10 Distance from Interaction to RNA of RNA Length")
 
 ```
+
+## Check the effect of RNA Length normalisation on the distribution of counts 
+We compare the distribution of counts after normalising for RNA lengths, in particular we would like to see a higher effect for Long-NonCoding RNAs, as they account for a high percentage of total and significant interactions.
+
+```{r}
+merged_runs$target.len <- merged_runs$target.end-merged_runs$target.start
+merged_runs$bait.len <- merged_runs$bait.end-merged_runs$bait.start
+#plot the relationship between bait length and counts
+```
+
+```{r, echo=FALSE}
+#load the images
+knitr::include_graphics("~/Radicl_Seq/Radicl_seq_functions/Images/Chicane_baits.trans_plot.png")
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("~/Radicl_Seq/Radicl_seq_functions/Images/Chicane_targets.trans_plot.png")
+```
+
+
+```{r, echo=FALSE}
+knitr::include_graphics("~/Radicl_Seq/Radicl_seq_functions/Images/Chicane_counts_dist.png")
+```
+
+
 
 
 
@@ -433,6 +474,23 @@ res_biotyp[gene_biotype=="protein_coding",gene_biotype:="pcRNA"]
 
 
 ```{r}
+res_biotyp$control <- ifelse(res_biotyp$type %in% c("Control Coding","Control NonCoding"), "Control","ICM")
+
+ggplot(res_biotyp,
+        aes(x=gene_biotype_hl,fill=gene_biotype_hl)) +
+    geom_bar()+
+    theme_cowplot()+
+  facet_wrap(~control)+
+    scale_fill_viridis(discrete=T)+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position="none")+
+    xlab("")+
+    ylab("Total Number of interactions")
+
+```
+
+
+```{r}
 ggplot(res_biotyp[q.value<0.05,],
         aes(x=gene_biotype_hl,fill=gene_biotype_hl)) +
     geom_bar()+
@@ -449,10 +507,11 @@ Proportion of cis coding/non coding interactions
 
 
 ```{r}
-merged_counts <- res_biotyp[q.value<0.05, .N, by=.(interaction,gene_biotype_hl, type)]
-merged_counts[,all_N :=sum(N), by=.(interaction, type)]
+merged_counts <- res_biotyp[q.value<0.05, .N, by=.(interaction,gene_biotype_hl, control)]
+#merged_counts$control <- ifelse(merged_counts$type %in% c("Control Coding","Control NonCoding"), "Control","ICM")
+merged_counts[,all_N :=sum(N), by=.(interaction, control)]
 merged_counts[,prop:=(N/all_N)]
-plot1 <- ggplot(merged_counts[type %in% c("Ctrl Rep1","Ctrl Rep2")],aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
+plot1 <- ggplot(merged_counts[control %in% c("Control")],aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
     geom_bar(stat="identity")+
     facet_wrap(~interaction)+
     theme_cowplot()+
@@ -462,7 +521,7 @@ plot1 <- ggplot(merged_counts[type %in% c("Ctrl Rep1","Ctrl Rep2")],aes(x=gene_b
     xlab("")+
     ylab("Proportion ")
 
-plot2 <- ggplot(merged_counts[type %in% c("ICM Rep1","ICM Rep2")],aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
+plot2 <- ggplot(merged_counts[control %in% c("ICM")],aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
     geom_bar(stat="identity")+
     facet_wrap(~interaction)+
     theme_cowplot()+
@@ -478,7 +537,7 @@ plot_grid(plot1,plot2, labels = c("Control","ICM"), nrow = 2)
 ```{r, out.height='100%'}
 ggplot(merged_counts,aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
     geom_bar(stat="identity")+
-    facet_wrap(type~interaction, nrow = 4)+
+    facet_wrap(control~interaction, nrow = 2)+
     theme_cowplot()+
     scale_fill_viridis(discrete=T)+
     theme(axis.text.x = element_text(angle = 45, hjust = 1),
@@ -486,3 +545,4 @@ ggplot(merged_counts,aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
     xlab("")+
     ylab("Proportion of significant cis/trans Interactions")
 ```
+
