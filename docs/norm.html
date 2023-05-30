@@ -500,7 +500,7 @@ div.tocify {
 <span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
 <span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co">#library(ggpubr)</span></span></code></pre></div>
 <pre><code>#&gt;              used   (Mb) gc trigger    (Mb)   max used   (Mb)
-#&gt; Ncells   10851032  579.6   17338411   926.0   11825405  631.6
+#&gt; Ncells   10851032  579.6   17338411   926.0   11825415  631.6
 #&gt; Vcells 1265377200 9654.1 1653230588 12613.2 1265440173 9654.6
 #&gt;        trans          cis bait.to.bait 
 #&gt;        &quot;76%&quot;        &quot;24%&quot;        &quot;25%&quot; 
@@ -533,8 +533,8 @@ div.tocify {
 <span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>))</span>
 <span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>DT<span class="sc">::</span><span class="fu">datatable</span>(qc_df, <span class="at">container =</span> sktech, <span class="at">rownames =</span> <span class="cn">TRUE</span>,<span class="at">options =</span> <span class="fu">list</span>(<span class="at">scrollX=</span><span class="cn">TRUE</span>))</span></code></pre></div>
-<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-66dda5514332009af01f" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-66dda5514332009af01f">{"x":{"filter":"none","vertical":false,"class":"display","data":[["trans","cis","bait.to.bait"],["76%","24%","25%"],["75%","25%","1%"],["79%","21%","26%"],["78%","22%","1%"],["76%","24%","23%"],["74%","26%","1%"],["80%","20%","24%"],["78%","22%","1%"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th rowspan=\"2\">Type<\/th>\n      <th colspan=\"5\">All<\/th>\n      <th colspan=\"5\">Significant<\/th>\n    <\/tr>\n    <tr>\n      <th>Ctrl Coding<\/th>\n      <th>Ctrl NonCoding<\/th>\n      <th>ICM Coding<\/th>\n      <th>ICM NonCoding<\/th>\n      <th>Ctrl Coding<\/th>\n      <th>Ctrl NonCoding<\/th>\n      <th>ICM Coding<\/th>\n      <th>ICM NonCoding<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"columnDefs":[{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-b5d9383c7cc12d4f8531" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-b5d9383c7cc12d4f8531">{"x":{"filter":"none","vertical":false,"class":"display","data":[["trans","cis","bait.to.bait"],["76%","24%","25%"],["75%","25%","1%"],["79%","21%","26%"],["78%","22%","1%"],["76%","24%","23%"],["74%","26%","1%"],["80%","20%","24%"],["78%","22%","1%"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th rowspan=\"2\">Type<\/th>\n      <th colspan=\"5\">All<\/th>\n      <th colspan=\"5\">Significant<\/th>\n    <\/tr>\n    <tr>\n      <th>Ctrl Coding<\/th>\n      <th>Ctrl NonCoding<\/th>\n      <th>ICM Coding<\/th>\n      <th>ICM NonCoding<\/th>\n      <th>Ctrl Coding<\/th>\n      <th>Ctrl NonCoding<\/th>\n      <th>ICM Coding<\/th>\n      <th>ICM NonCoding<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"columnDefs":[{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 <div id="preprocessing" class="section level2">
 <h2>Preprocessing</h2>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">#read in the data</span></span>
@@ -560,7 +560,7 @@ div.tocify {
 <span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(baits) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;chr&quot;</span>,<span class="st">&quot;start&quot;</span>,<span class="st">&quot;end&quot;</span>,<span class="st">&quot;bait_name&quot;</span>)</span></code></pre></div>
 <pre><code>#&gt;              used    (Mb) gc trigger    (Mb)   max used    (Mb)
 #&gt; Ncells   10936334   584.1   17338411   926.0   17338411   926.0
-#&gt; Vcells 1908717079 14562.4 6155472291 46962.6 5128160091 39124.8</code></pre>
+#&gt; Vcells 1908717079 14562.4 6155472300 46962.6 5128160095 39124.8</code></pre>
 </div>
 <div id="relationship-between-rna-length-and-detected-interactions"
 class="section level2">
@@ -962,9 +962,9 @@ significant interactions.</p>
 <div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>merged_runs<span class="sc">$</span>target.len <span class="ot">&lt;-</span> merged_runs<span class="sc">$</span>target.end<span class="sc">-</span>merged_runs<span class="sc">$</span>target.start</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>merged_runs<span class="sc">$</span>bait.len <span class="ot">&lt;-</span> merged_runs<span class="sc">$</span>bait.end<span class="sc">-</span>merged_runs<span class="sc">$</span>bait.start</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="co">#plot the relationship between bait length and counts</span></span></code></pre></div>
-<p><img src="../../Images/Chicane_baits.trans_plot.png" width="2066" /></p>
-<p><img src="../../Images/Chicane_targets.trans_plot.png" width="2066" /></p>
-<p><img src="../../Images/Chicane_counts_dist.png" width="2066" /></p>
+<p><img src="../Images/Chicane_baits.trans_plot.png" width="2066" /></p>
+<p><img src="../Images/Chicane_targets.trans_plot.png" width="2066" /></p>
+<p><img src="../Images/Chicane_counts_dist.png" width="2066" /></p>
 </div>
 <div id="coding-vs-non-coding-rnas" class="section level2">
 <h2>Coding vs Non-coding RNAs</h2>

@@ -3,7 +3,7 @@ output_dir: "."
 navbar:
   title: "Chicane-analysis"
   left:
-    - text: "Default"
+    - text: "Home"
       href: index.html
     - text: "Noncoding split"
       href: coding.html

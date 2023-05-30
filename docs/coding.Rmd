@@ -76,12 +76,12 @@ sktech = htmltools::withTags(table(
   class = 'display',
   thead(
     tr(
-      th(rowspan = 2, 'Percent'),
+      th(rowspan = 2, 'Type'),
       th(colspan = 5, 'All'),
-      th(colspan = 5, 'Signif')
+      th(colspan = 5, 'Significant')
     ),
     tr(
-      lapply( rep(c("Ctrl Rep1", "Ctrl Rep2","ICM Rep1","ICM Rep2"),2), th)
+      lapply( rep(c("Ctrl Coding", "Ctrl NonCoding","ICM Coding","ICM NonCoding"),2), th)
     )
   )
 ))
@@ -117,6 +117,10 @@ merged_stretch_cis <- merged_runs[!is.na(distance),.(count2=1:count),names(merge
 #get gene names
 baits <- fread("~/Radicl_Seq/Gene_locations_no_ovrlps.bed")
 colnames(baits) <- c("chr","start","end","bait_name")
+merged_runs[,bait_name := baits$bait_name[match(merged_runs$bait.start,baits$start)]]
+merged_runs_non_b2b <- merged_runs[bait.to.bait==FALSE]
+merged_runs_b2b <- merged_runs[bait.to.bait==TRUE]
+setorder(merged_runs_non_b2b,q.value)
 ```
 
 
@@ -131,7 +135,7 @@ gc()
 
 ## Relationship between RNA length and detected interactions 
 
-```{r}
+```{r,eval=FALSE}
 merged_runs[,bait_name := baits$bait_name[match(merged_runs$bait.start,baits$start)]]
 merged_runs_non_b2b <- merged_runs[bait.to.bait==FALSE]
 merged_runs_b2b <- merged_runs[bait.to.bait==TRUE]
@@ -212,7 +216,7 @@ merged_run_sum_frag_b2b <-
 
 
 
-```{r}
+```{r,eval=FALSE}
 
 #Print summarized counts by bait where it wasnt bait to bait
 
@@ -224,9 +228,9 @@ print(merged_runs_sum_non_b2b)
 print(merged_run_sum_frag_b2b)
 ```
 
-Trying wilcoxons test
+<!-- Trying wilcoxons test -->
 
-```{r}
+```{r, eval=FALSE}
 #non bait to bait
 non_b2b_bait_wt <-
   wilcox.test(merged_runs_non_b2b[q.value<0.05]$bait.length,
@@ -255,9 +259,9 @@ print(b2b_bait_wt)
 print(b2b_frag_wt)
 ```
 
-Show the plot and results
+<!-- Show the plot and results -->
 
-```{r}
+```{r, eval=FALSE}
 plt_non_b2b_frag <- 
   ggplot(merged_runs_non_b2b,
          aes(x=signif,y=log(frag.length,base = 10),fill=signif))+
@@ -318,6 +322,9 @@ gridExtra::grid.arrange(plt_non_b2b_frag,plt_non_b2b_bait,
 
 ```
 
+## Comparing the effect of coding/non-coding split
+
+Without splitting the coding and non-coding runs,a total of 31450 RNAs are detected in the input baits file and approximately 25000 unique baits are present in the Chicane results for each condition. However, on splitting the coding and noncoding RNAs, we have 18562 coding and 20078 non-coding genes present in the input baits file and a total of 34214 unique baits present in the chicane results.
 
 ## Distance of interactions from Transcriptional start site
 
@@ -493,4 +500,12 @@ ggplot(merged_counts,aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
           legend.position="none")+
     xlab("")+
     ylab("Proportion of significant cis/trans Interactions")
+```
+
+
+## Comparing the combined and split runs
+
+```{r}
+
+
 ```
