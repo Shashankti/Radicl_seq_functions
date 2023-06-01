@@ -29,6 +29,15 @@ tpm3 <- function(interaction.data){
   return(tpm.count) 
 }
 
+running_chicane <- function(interaction.data, cores=1,
+                            interim.data.dir=NULL, 
+                            keep.files=FALSE){
+  interaction.data[,c("bait.trans.count","target.trans.count")] <- NULL
+  interaction.data$count <- tpm3(interaction.data)
+  interaction.data <- add.covariates(interaction.data)
+  results <- chicane(interactions = interaction.data, cores = cores)
+  return(results)
+}
 
 
 ####################

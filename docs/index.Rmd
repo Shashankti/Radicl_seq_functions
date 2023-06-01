@@ -1,5 +1,5 @@
 ---
-title: "Analysis of MeDip-Seq data"
+title: "Analysis of RadiclSeq data"
 author: "Shashank Tiwari"
 date: "Most recent update:<br> `r Sys.Date()`"
 output: 
@@ -48,6 +48,9 @@ library(svglite)
 
 ```{r,echo=FALSE}
 load("~/Radicl_Seq/running_chicane.RData")
+#read in all chicane results
+control_coding_2kb <- data.table::fread("")
+
 
 qc_check <- function(significant_results){
   #check propportion by interaction type

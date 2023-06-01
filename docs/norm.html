@@ -471,9 +471,9 @@ div.tocify {
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">comment =</span> <span class="st">&quot;#&gt;&quot;</span>,</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">#root.dir = root.dir</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">fig.height =</span> <span class="dv">6</span>,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">fig.width =</span> <span class="fl">8.00787</span> <span class="co">#178mm</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">fig.width =</span> <span class="fl">7.00787</span> <span class="co">#178mm</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)  </span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_knit<span class="sc">$</span><span class="fu">set</span>(<span class="co">#root.dir = root.dir, </span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_knit<span class="sc">$</span><span class="fu">set</span>(<span class="at">root.dir =</span> <span class="st">&quot;~/Radicl_Seq/Radicl_seq_functions/&quot;</span>, </span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                     <span class="at">dpi =</span> <span class="dv">350</span>)  </span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
@@ -500,8 +500,8 @@ div.tocify {
 <span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
 <span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co">#library(ggpubr)</span></span></code></pre></div>
 <pre><code>#&gt;              used   (Mb) gc trigger    (Mb)   max used   (Mb)
-#&gt; Ncells   10851032  579.6   17338411   926.0   11825415  631.6
-#&gt; Vcells 1265377192 9654.1 1653230576 12613.2 1265440165 9654.6
+#&gt; Ncells   10851038  579.6   17338414   926.0   11825382  631.6
+#&gt; Vcells 1265377258 9654.1 1653230670 12613.2 1265440231 9654.6
 #&gt;        trans          cis bait.to.bait 
 #&gt;        &quot;76%&quot;        &quot;24%&quot;        &quot;25%&quot; 
 #&gt;        trans          cis bait.to.bait 
@@ -533,8 +533,8 @@ div.tocify {
 <span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>))</span>
 <span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>DT<span class="sc">::</span><span class="fu">datatable</span>(qc_df, <span class="at">container =</span> sktech, <span class="at">rownames =</span> <span class="cn">TRUE</span>,<span class="at">options =</span> <span class="fu">list</span>(<span class="at">scrollX=</span><span class="cn">TRUE</span>))</span></code></pre></div>
-<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-75d6eb5d55358e6624b3" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-75d6eb5d55358e6624b3">{"x":{"filter":"none","vertical":false,"class":"display","data":[["trans","cis","bait.to.bait"],["76%","24%","25%"],["75%","25%","1%"],["79%","21%","26%"],["78%","22%","1%"],["76%","24%","23%"],["74%","26%","1%"],["80%","20%","24%"],["78%","22%","1%"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th rowspan=\"2\">Type<\/th>\n      <th colspan=\"5\">All<\/th>\n      <th colspan=\"5\">Significant<\/th>\n    <\/tr>\n    <tr>\n      <th>Ctrl Coding<\/th>\n      <th>Ctrl NonCoding<\/th>\n      <th>ICM Coding<\/th>\n      <th>ICM NonCoding<\/th>\n      <th>Ctrl Coding<\/th>\n      <th>Ctrl NonCoding<\/th>\n      <th>ICM Coding<\/th>\n      <th>ICM NonCoding<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"columnDefs":[{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-98c0ea7418d1e2fb68d4" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-98c0ea7418d1e2fb68d4">{"x":{"filter":"none","vertical":false,"class":"display","data":[["trans","cis","bait.to.bait"],["76%","24%","25%"],["75%","25%","1%"],["79%","21%","26%"],["78%","22%","1%"],["76%","24%","23%"],["74%","26%","1%"],["80%","20%","24%"],["78%","22%","1%"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th rowspan=\"2\">Type<\/th>\n      <th colspan=\"5\">All<\/th>\n      <th colspan=\"5\">Significant<\/th>\n    <\/tr>\n    <tr>\n      <th>Ctrl Coding<\/th>\n      <th>Ctrl NonCoding<\/th>\n      <th>ICM Coding<\/th>\n      <th>ICM NonCoding<\/th>\n      <th>Ctrl Coding<\/th>\n      <th>Ctrl NonCoding<\/th>\n      <th>ICM Coding<\/th>\n      <th>ICM NonCoding<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"columnDefs":[{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 <div id="preprocessing" class="section level2">
 <h2>Preprocessing</h2>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">#read in the data</span></span>
@@ -559,8 +559,8 @@ div.tocify {
 <span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>baits <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">&quot;~/Radicl_Seq/Gene_locations_no_ovrlps.bed&quot;</span>)</span>
 <span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(baits) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;chr&quot;</span>,<span class="st">&quot;start&quot;</span>,<span class="st">&quot;end&quot;</span>,<span class="st">&quot;bait_name&quot;</span>)</span></code></pre></div>
 <pre><code>#&gt;              used    (Mb) gc trigger    (Mb)   max used    (Mb)
-#&gt; Ncells   10936334   584.1   17338411   926.0   17338411   926.0
-#&gt; Vcells 1908717071 14562.4 6155472282 46962.6 5128160087 39124.8</code></pre>
+#&gt; Ncells   10936340   584.1   17338414   926.0   17338414   926.0
+#&gt; Vcells 1908717137 14562.4 6155472420 46962.6 5128160153 39124.8</code></pre>
 </div>
 <div id="relationship-between-rna-length-and-detected-interactions"
 class="section level2">
@@ -902,7 +902,7 @@ class="section level2">
 <span id="cb19-63"><a href="#cb19-63" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb19-64"><a href="#cb19-64" aria-hidden="true" tabindex="-1"></a>gridExtra<span class="sc">::</span><span class="fu">grid.arrange</span>(plt_non_b2b_frag,plt_non_b2b_bait,</span>
 <span id="cb19-65"><a href="#cb19-65" aria-hidden="true" tabindex="-1"></a>                          plt_b2b_frag,plt_b2b_bait,<span class="at">ncol=</span><span class="dv">2</span>)</span></code></pre></div>
-<p><img src="norm_files/figure-html/unnamed-chunk-8-1.png" width="768.75552" /></p>
+<p><img src="norm_files/figure-html/unnamed-chunk-8-1.png" width="672.75552" /></p>
 </div>
 <div id="distance-of-interactions-from-transcriptional-start-site"
 class="section level2">
@@ -917,7 +917,7 @@ class="section level2">
 <span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="at">x=</span><span class="fu">log</span>(<span class="dv">500000</span>,<span class="at">base=</span><span class="dv">10</span>),<span class="at">y=</span><span class="dv">2</span>,<span class="at">label=</span><span class="st">&quot;500Kb&quot;</span>,<span class="at">vjust=</span><span class="dv">2</span>,<span class="at">geom=</span><span class="st">&quot;label&quot;</span>)<span class="sc">+</span></span>
 <span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">&quot;Log 10 Distance from Interaction to RNA&quot;</span>)<span class="sc">+</span></span>
 <span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>type)</span></code></pre></div>
-<p><img src="norm_files/figure-html/unnamed-chunk-9-1.png" width="768.75552" /></p>
+<p><img src="norm_files/figure-html/unnamed-chunk-9-1.png" width="672.75552" /></p>
 <p>Split the plot according to the Replicate type and next according to
 the p value</p>
 <div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a></span>
@@ -932,7 +932,7 @@ the p value</p>
 <span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="at">x=</span><span class="fu">log</span>(<span class="dv">24000000</span>,<span class="at">base =</span> <span class="dv">10</span>), <span class="at">y=</span><span class="dv">2</span>, <span class="at">label=</span><span class="st">&quot;24Mb&quot;</span>,<span class="at">vjust=</span><span class="dv">2</span>,<span class="at">geom =</span> <span class="st">&quot;label&quot;</span>) <span class="sc">+</span></span>
 <span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="at">x=</span><span class="fu">log</span>(<span class="dv">500000</span>,<span class="at">base =</span> <span class="dv">10</span>), <span class="at">y=</span><span class="dv">2</span>, <span class="at">label=</span><span class="st">&quot;500kb&quot;</span>,<span class="at">vjust=</span><span class="dv">2</span>,<span class="at">geom =</span> <span class="st">&quot;label&quot;</span>) <span class="sc">+</span></span>
 <span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Log 10 Distance from interaction to RNA&quot;</span>)</span></code></pre></div>
-<p><img src="norm_files/figure-html/unnamed-chunk-10-1.png" width="768.75552" />
+<p><img src="norm_files/figure-html/unnamed-chunk-10-1.png" width="672.75552" />
 Normalizing the plot for RNA distance</p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>merged_stretch_cis[,stnd_dist<span class="sc">:</span><span class="er">=</span>distance<span class="sc">/</span>bait.length]</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -948,7 +948,7 @@ Normalizing the plot for RNA distance</p>
 <span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="at">x=</span><span class="fu">log</span>(<span class="dv">400</span>,<span class="at">base=</span><span class="dv">10</span>),<span class="at">y=</span>.<span class="dv">8</span>,<span class="at">label=</span><span class="st">&quot;120x RNA Length&quot;</span>,<span class="at">vjust=</span><span class="dv">2</span>,</span>
 <span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>             <span class="at">geom=</span><span class="st">&quot;label&quot;</span>)<span class="sc">+</span></span>
 <span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">&quot;Log 10 Distance from Interaction to RNA of RNA Length&quot;</span>)</span></code></pre></div>
-<p><img src="norm_files/figure-html/unnamed-chunk-11-1.png" width="768.75552" /></p>
+<p><img src="norm_files/figure-html/unnamed-chunk-11-1.png" width="672.75552" /></p>
 </div>
 <div
 id="check-the-effect-of-rna-length-normalisation-on-the-distribution-of-counts"
@@ -962,9 +962,9 @@ significant interactions.</p>
 <div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>merged_runs<span class="sc">$</span>target.len <span class="ot">&lt;-</span> merged_runs<span class="sc">$</span>target.end<span class="sc">-</span>merged_runs<span class="sc">$</span>target.start</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>merged_runs<span class="sc">$</span>bait.len <span class="ot">&lt;-</span> merged_runs<span class="sc">$</span>bait.end<span class="sc">-</span>merged_runs<span class="sc">$</span>bait.start</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="co">#plot the relationship between bait length and counts</span></span></code></pre></div>
-<p><img src="../Images/Chicane_baits.trans_plot.png" width="2066" /></p>
-<p><img src="../Images/Chicane_targets.trans_plot.png" width="2066" /></p>
-<p><img src="../Images/Chicane_counts_dist.png" width="2066" /></p>
+<p><img src="../Images/Chicane_baits.trans_plot.png" width="100%" /></p>
+<p><img src="../Images/Chicane_targets.trans_plot.png" width="100%" /></p>
+<p><img src="../Images/Chicane_counts_dist.png" width="100%" /></p>
 </div>
 <div id="coding-vs-non-coding-rnas" class="section level2">
 <h2>Coding vs Non-coding RNAs</h2>
@@ -1028,7 +1028,7 @@ significant interactions.</p>
 <span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">legend.position=</span><span class="st">&quot;none&quot;</span>)<span class="sc">+</span></span>
 <span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">&quot;&quot;</span>)<span class="sc">+</span></span>
 <span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">&quot;Total Number of interactions&quot;</span>)</span></code></pre></div>
-<p><img src="norm_files/figure-html/unnamed-chunk-18-1.png" width="768.75552" /></p>
+<p><img src="norm_files/figure-html/unnamed-chunk-18-1.png" width="672.75552" /></p>
 <div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(res_biotyp[q.value<span class="sc">&lt;</span><span class="fl">0.05</span>,],</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>        <span class="fu">aes</span>(<span class="at">x=</span>gene_biotype_hl,<span class="at">fill=</span>gene_biotype_hl)) <span class="sc">+</span></span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_bar</span>()<span class="sc">+</span></span>
@@ -1039,7 +1039,7 @@ significant interactions.</p>
 <span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">legend.position=</span><span class="st">&quot;none&quot;</span>)<span class="sc">+</span></span>
 <span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">&quot;&quot;</span>)<span class="sc">+</span></span>
 <span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">&quot;Number of significant interactions&quot;</span>)</span></code></pre></div>
-<p><img src="norm_files/figure-html/unnamed-chunk-19-1.png" width="768.75552" /></p>
+<p><img src="norm_files/figure-html/unnamed-chunk-19-1.png" width="672.75552" /></p>
 <p>Proportion of cis coding/non coding interactions</p>
 <div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>merged_counts <span class="ot">&lt;-</span> res_biotyp[q.value<span class="sc">&lt;</span><span class="fl">0.05</span>, .N, by<span class="ot">=</span>.(interaction,gene_biotype_hl, control)]</span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co">#merged_counts$control &lt;- ifelse(merged_counts$type %in% c(&quot;Control Coding&quot;,&quot;Control NonCoding&quot;), &quot;Control&quot;,&quot;ICM&quot;)</span></span>
@@ -1065,7 +1065,7 @@ significant interactions.</p>
 <span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">&quot;&quot;</span>)<span class="sc">+</span></span>
 <span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">&quot;Proportion &quot;</span>)</span>
 <span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_grid</span>(plot1,plot2, <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;Control&quot;</span>,<span class="st">&quot;ICM&quot;</span>), <span class="at">nrow =</span> <span class="dv">2</span>)</span></code></pre></div>
-<p><img src="norm_files/figure-html/unnamed-chunk-20-1.png" width="768.75552" /></p>
+<p><img src="norm_files/figure-html/unnamed-chunk-20-1.png" width="672.75552" /></p>
 <div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(merged_counts,<span class="fu">aes</span>(<span class="at">x=</span>gene_biotype_hl,<span class="at">y=</span>prop,<span class="at">fill=</span>gene_biotype_hl)) <span class="sc">+</span></span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_bar</span>(<span class="at">stat=</span><span class="st">&quot;identity&quot;</span>)<span class="sc">+</span></span>
 <span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(control<span class="sc">~</span>interaction, <span class="at">nrow =</span> <span class="dv">2</span>)<span class="sc">+</span></span>
@@ -1075,7 +1075,7 @@ significant interactions.</p>
 <span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">legend.position=</span><span class="st">&quot;none&quot;</span>)<span class="sc">+</span></span>
 <span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">&quot;&quot;</span>)<span class="sc">+</span></span>
 <span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">&quot;Proportion of significant cis/trans Interactions&quot;</span>)</span></code></pre></div>
-<p><img src="norm_files/figure-html/unnamed-chunk-21-1.png" width="768.75552" height="100%" /></p>
+<p><img src="norm_files/figure-html/unnamed-chunk-21-1.png" width="672.75552" height="100%" /></p>
 </div>
 
 

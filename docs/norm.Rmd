@@ -23,9 +23,9 @@ knitr::opts_chunk$set(
   comment = "#>",
   #root.dir = root.dir
   fig.height = 6,
-  fig.width = 8.00787 #178mm
+  fig.width = 7.00787 #178mm
 )  
-knitr::opts_knit$set(#root.dir = root.dir, 
+knitr::opts_knit$set(#root.dir = "~/Radicl_Seq/Radicl_seq_functions/", 
                      dpi = 350)  
 library(data.table)
 library(ggplot2)
@@ -395,18 +395,18 @@ merged_runs$bait.len <- merged_runs$bait.end-merged_runs$bait.start
 #plot the relationship between bait length and counts
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, out.width='100%'}
 #load the images
-knitr::include_graphics("../Images/Chicane_baits.trans_plot.png")
+knitr::include_graphics("../Images/Chicane_baits.trans_plot.png", error = F)
 ```
 
-```{r, echo=FALSE}
-knitr::include_graphics("../Images/Chicane_targets.trans_plot.png")
+```{r, echo=FALSE, out.width='100%'}
+knitr::include_graphics("../Images/Chicane_targets.trans_plot.png", error = FALSE)
 ```
 
 
-```{r, echo=FALSE}
-knitr::include_graphics("../Images/Chicane_counts_dist.png")
+```{r, echo=FALSE, out.width='100%'}
+knitr::include_graphics("../Images/Chicane_counts_dist.png", error = F)
 ```
 
 
