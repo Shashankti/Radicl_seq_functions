@@ -397,16 +397,16 @@ merged_runs$bait.len <- merged_runs$bait.end-merged_runs$bait.start
 
 ```{r, echo=FALSE}
 #load the images
-knitr::include_graphics("~/Radicl_Seq/Radicl_seq_functions/Images/Chicane_baits.trans_plot.png")
+knitr::include_graphics("../Images/Chicane_baits.trans_plot.png")
 ```
 
 ```{r, echo=FALSE}
-knitr::include_graphics("~/Radicl_Seq/Radicl_seq_functions/Images/Chicane_targets.trans_plot.png")
+knitr::include_graphics("../Images/Chicane_targets.trans_plot.png")
 ```
 
 
 ```{r, echo=FALSE}
-knitr::include_graphics("~/Radicl_Seq/Radicl_seq_functions/Images/Chicane_counts_dist.png")
+knitr::include_graphics("../Images/Chicane_counts_dist.png")
 ```
 
 
@@ -495,7 +495,7 @@ ggplot(res_biotyp[q.value<0.05,],
         aes(x=gene_biotype_hl,fill=gene_biotype_hl)) +
     geom_bar()+
     theme_cowplot()+
-  facet_wrap(~type)+
+  facet_wrap(~control)+
     scale_fill_viridis(discrete=T)+
     theme(axis.text.x = element_text(angle = 45, hjust = 1),
             legend.position="none")+

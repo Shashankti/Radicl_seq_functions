@@ -460,7 +460,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Analysis of MeDip-Seq data</h1>
 <h4 class="author">Shashank Tiwari</h4>
-<h4 class="date">Most recent update:<br> 2023-05-30</h4>
+<h4 class="date">Most recent update:<br> 2023-06-01</h4>
 
 </div>
 
@@ -501,7 +501,7 @@ div.tocify {
 <span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co">#library(ggpubr)</span></span></code></pre></div>
 <pre><code>#&gt;              used   (Mb) gc trigger    (Mb)   max used   (Mb)
 #&gt; Ncells   10851032  579.6   17338411   926.0   11825415  631.6
-#&gt; Vcells 1265377200 9654.1 1653230588 12613.2 1265440173 9654.6
+#&gt; Vcells 1265377192 9654.1 1653230576 12613.2 1265440165 9654.6
 #&gt;        trans          cis bait.to.bait 
 #&gt;        &quot;76%&quot;        &quot;24%&quot;        &quot;25%&quot; 
 #&gt;        trans          cis bait.to.bait 
@@ -533,8 +533,8 @@ div.tocify {
 <span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>))</span>
 <span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>DT<span class="sc">::</span><span class="fu">datatable</span>(qc_df, <span class="at">container =</span> sktech, <span class="at">rownames =</span> <span class="cn">TRUE</span>,<span class="at">options =</span> <span class="fu">list</span>(<span class="at">scrollX=</span><span class="cn">TRUE</span>))</span></code></pre></div>
-<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-b5d9383c7cc12d4f8531" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-b5d9383c7cc12d4f8531">{"x":{"filter":"none","vertical":false,"class":"display","data":[["trans","cis","bait.to.bait"],["76%","24%","25%"],["75%","25%","1%"],["79%","21%","26%"],["78%","22%","1%"],["76%","24%","23%"],["74%","26%","1%"],["80%","20%","24%"],["78%","22%","1%"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th rowspan=\"2\">Type<\/th>\n      <th colspan=\"5\">All<\/th>\n      <th colspan=\"5\">Significant<\/th>\n    <\/tr>\n    <tr>\n      <th>Ctrl Coding<\/th>\n      <th>Ctrl NonCoding<\/th>\n      <th>ICM Coding<\/th>\n      <th>ICM NonCoding<\/th>\n      <th>Ctrl Coding<\/th>\n      <th>Ctrl NonCoding<\/th>\n      <th>ICM Coding<\/th>\n      <th>ICM NonCoding<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"columnDefs":[{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-75d6eb5d55358e6624b3" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-75d6eb5d55358e6624b3">{"x":{"filter":"none","vertical":false,"class":"display","data":[["trans","cis","bait.to.bait"],["76%","24%","25%"],["75%","25%","1%"],["79%","21%","26%"],["78%","22%","1%"],["76%","24%","23%"],["74%","26%","1%"],["80%","20%","24%"],["78%","22%","1%"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th rowspan=\"2\">Type<\/th>\n      <th colspan=\"5\">All<\/th>\n      <th colspan=\"5\">Significant<\/th>\n    <\/tr>\n    <tr>\n      <th>Ctrl Coding<\/th>\n      <th>Ctrl NonCoding<\/th>\n      <th>ICM Coding<\/th>\n      <th>ICM NonCoding<\/th>\n      <th>Ctrl Coding<\/th>\n      <th>Ctrl NonCoding<\/th>\n      <th>ICM Coding<\/th>\n      <th>ICM NonCoding<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"columnDefs":[{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 <div id="preprocessing" class="section level2">
 <h2>Preprocessing</h2>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">#read in the data</span></span>
@@ -560,7 +560,7 @@ div.tocify {
 <span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(baits) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;chr&quot;</span>,<span class="st">&quot;start&quot;</span>,<span class="st">&quot;end&quot;</span>,<span class="st">&quot;bait_name&quot;</span>)</span></code></pre></div>
 <pre><code>#&gt;              used    (Mb) gc trigger    (Mb)   max used    (Mb)
 #&gt; Ncells   10936334   584.1   17338411   926.0   17338411   926.0
-#&gt; Vcells 1908717079 14562.4 6155472300 46962.6 5128160095 39124.8</code></pre>
+#&gt; Vcells 1908717071 14562.4 6155472282 46962.6 5128160087 39124.8</code></pre>
 </div>
 <div id="relationship-between-rna-length-and-detected-interactions"
 class="section level2">
@@ -1033,7 +1033,7 @@ significant interactions.</p>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>        <span class="fu">aes</span>(<span class="at">x=</span>gene_biotype_hl,<span class="at">fill=</span>gene_biotype_hl)) <span class="sc">+</span></span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_bar</span>()<span class="sc">+</span></span>
 <span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_cowplot</span>()<span class="sc">+</span></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>type)<span class="sc">+</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>control)<span class="sc">+</span></span>
 <span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_viridis</span>(<span class="at">discrete=</span>T)<span class="sc">+</span></span>
 <span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>),</span>
 <span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">legend.position=</span><span class="st">&quot;none&quot;</span>)<span class="sc">+</span></span>
