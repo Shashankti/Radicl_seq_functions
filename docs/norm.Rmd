@@ -395,18 +395,18 @@ merged_runs$bait.len <- merged_runs$bait.end-merged_runs$bait.start
 #plot the relationship between bait length and counts
 ```
 
-```{r, echo=FALSE, out.width='100%'}
+```{r, echo=FALSE}
 #load the images
-knitr::include_graphics("../Images/Chicane_baits.trans_plot.png", error = F)
+knitr::include_graphics("Images/Chicane_baits.trans_plot.png", error = F,dpi = NA )
 ```
 
-```{r, echo=FALSE, out.width='100%'}
-knitr::include_graphics("../Images/Chicane_targets.trans_plot.png", error = FALSE)
+```{r, echo=FALSE}
+knitr::include_graphics("Images/Chicane_targets.trans_plot.png", error = FALSE )
 ```
 
 
-```{r, echo=FALSE, out.width='100%'}
-knitr::include_graphics("../Images/Chicane_counts_dist.png", error = F)
+```{r, echo=FALSE}
+knitr::include_graphics("Images/Chicane_counts_dist.png", error = F, dpi = NA)
 ```
 
 
