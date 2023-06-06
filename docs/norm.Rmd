@@ -409,7 +409,9 @@ knitr::include_graphics("Images/Chicane_targets.trans_plot.png", error = FALSE )
 knitr::include_graphics("Images/Chicane_counts_dist.png", error = F, dpi = NA)
 ```
 
-
+```{r, echo=FALSE}
+knitr::include_graphics("Images/Chicane_qvalue_plot.png", error = F, dpi = NA)
+```
 
 
 
