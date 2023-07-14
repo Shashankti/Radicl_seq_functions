@@ -44,12 +44,14 @@ library(patchwork)
 library(slickR)
 library(svglite)
 library(scales)
+library(reticulate)
+library(bedtoolsr)
 #library(ggpubr)
 ```
 
 
 ```{r,echo=FALSE, message=FALSE}
-load("~/Radicl_Seq/Norm_bin_coding_nc.RData")
+load("~/Radicl_Seq/Normalised_2kb_Split/Norm_bin_coding_nc.RData")
 # control_coding <- data.table::fread("../../2kb/control_coding.txt", header = T, sep = ",")
 # control_nc <- data.table::fread("../../2kb/control_nc.txt")
 # ICM_coding <- data.table::fread("../../2kb/ICM_coding.txt")
@@ -128,8 +130,15 @@ merged_stretch_cis <- merged_runs[!is.na(distance),.(count2=1:count),names(merge
 
 
 #get gene names
-baits <- fread("~/Radicl_Seq/Gene_locations_no_ovrlps.bed")
-colnames(baits) <- c("chr","start","end","bait_name")
+baits_coding <- fread("~/Radicl_Seq/coding_genes_no_ovrlps.bed")
+colnames(baits_coding) <- c("chr","start","end","bait_name")
+baits_coding$chr <- sub("^","chr", baits_coding$chr)
+
+baits_noncoding <- fread("~/Radicl_Seq/non_coding_genes_no_ovrlps.bed")
+colnames(baits_noncoding) <- c("chr","start","end","bait_name")
+baits_noncoding$chr <- sub("^","chr",baits_noncoding$chr)
+
+baits <- rbind(baits_coding, baits_noncoding)
 ```
 
 
@@ -428,7 +437,7 @@ merged_runs[!is.na(distance),interaction:="cis"]
 genes <- unique(merged_runs$bait_name)
 
 mart <- useMart("ENSEMBL_MART_ENSEMBL", host = "https://asia.ensembl.org")
-mart <- useDataset("hsapiens_gene_ensembl", mart)
+mart <- useDataset("mmusculus_gene_ensembl", mart)
 annotLookup <- getBM(
   mart = mart,
   attributes = c(
@@ -546,5 +555,341 @@ ggplot(merged_counts,aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
           legend.position="none")+
     xlab("")+
     ylab("Proportion of significant cis/trans Interactions")
+
 ```
 
+
+
+```{r, eval=FALSE, echo=FALSE}
+ICM_coding_norm <- data.table::fread("../../Normalised_2kb_Split/ICM_coding.txt")
+ICM_coding_raw <-data.table::fread("../../Raw_2kb_Split/ICM_coding.txt")
+ICM_merged <- inner_join(ICM_coding_norm,ICM_coding_raw, by=join_by(target.id, bait.id))
+ICM_merged$bait.len <- ICM_merged$bait.end.y-ICM_merged$bait.start.y
+ICM_merged[,bait_name := baits$bait_name[match(ICM_merged$bait.start.x,baits$start)]]
+ICM_merged <- ICM_merged[,c("target.id","bait.id","distance.x","distance.y","count.x","count.y","bait.trans.count.x",
+                            "target.trans.count.x","q.value.x","q.value.y","bait.len", "bait_name")]
+
+
+ggplot(ICM_merged, aes(x=log10(bait.len),y=count.x))+
+  geom_density()
+
+df <- ICM_merged %>% gather(qvalue, var, q.value.x:q.value.y)
+
+df <- ICM_merged[,c("bait.len","q.value.x", "q.value.y")]%>%
+  pivot_longer(., cols = c(q.value.x, q.value.y),
+               names_to = "Var", values_to = "Val") %>%
+  as.data.table()
+
+
+
+
+ggplot(merged_runs[merged_runs$bait_name=="TALAM1",], 
+       aes(x = log(count, base = 10), y = log10(q.value), color= interaction)) + 
+    geom_point(size=0.5, alpha=0.5)+
+    theme_cowplot()+
+    scale_fill_viridis(discrete = T)+
+    facet_wrap(~type)
+
+```
+
+
+```{r,eval=FALSE}
+#import in the annotation file
+
+DNA_annot <- data.table::fread("../../GRCh38-cCREs.bed")
+CTCF_reg <- DNA_annot[DNA_annot$V6 %like% "CTCF",]
+prox_enh_reg <- DNA_annot[DNA_annot$V6 %like% "pELS",]
+dist_enh_reg <- DNA_annot[DNA_annot$V6 %like% "dELS",]
+promoter_reg <- DNA_annot[DNA_annot$V6 %like% "PLS",]
+dnase_h3k4me3_red <- DNA_annot[DNA_annot$V6 %like% "DNase-H3K4me3",]
+#intersect with the DNA loc file
+options(bedtools.path = "~/bedtools2/bin/")
+DNA_loc <- merged_runs[,c("target.chr","target.start","target.end")]
+#write the output of dna loc
+fwrite(DNA_loc, file = "~/Radicl_Seq/Norm_merged_runs_dna.tsv", sep = "\t", quote = F, col.names = F, row.names = F)
+#perform bedtools intersect in terminal
+#ans <- bedtoolsr::bt.intersect(a=DNA_loc,
+#                               b=CTCF_reg,
+#                               wa=T,
+#                               wb=T)
+
+
+```
+
+```{bash, eval=F,echo=F}
+bedtools intersect -a Norm_merged_runs_dna.tsv -b GRCh38-cCREs.bed -wa -wb | cut -f1,2,3,9 | awk '!x[$0]++' | tr ' ' '\t' > /scratch1/users/shashank.tiwari/Radicl_Seq/DNA_annot.tsv
+
+
+```
+
+
+```{r,eval=FALSE}
+#ans <- ans[,c(1,2,3,9)]
+#ans <- ans[!duplicated(ans),]
+# read in the annotated file
+ans <- fread("~/Radicl_Seq/mm10_DNA_annot.tsv")
+#add annotation results to RadiclSeq results
+colnames(ans) <- c("chr","start","end","annotation")
+ans$target.id <- paste0(ans$chr,":",ans$start,"-",ans$end)
+ans$type <- merged_runs[match(ans$target.id, merged_runs$target.id),"type"]
+ans$interaction <- merged_runs[match(ans$target.id, merged_runs$target.id),"interaction"]
+ans$gene_biotype <- res_biotyp[match(ans$target.id, res_biotyp$target.id),"gene_biotype_hl"]
+ans$signif <- res_biotyp[match(ans$target.id, res_biotyp$target.id),"signif"]
+ans$control <- res_biotyp[match(ans$target.id, res_biotyp$target.id),"control"]
+ans$bait_name <- res_biotyp[match(ans$target.id, res_biotyp$target.id),"bait_name"]
+ans$q.value <- res_biotyp[match(ans$target.id, res_biotyp$target.id),"q.value"]
+ans$q.value <- merged_runs[match(ans$target.id, merged_runs$target.id),"q.value"]
+
+#copyt this sptep for all the remainign annotation types
+#adding columns to identify ctcf and other types of interactions
+ans$ctcf <- ifelse(ans$annotation %like% "CTCF", "Yes","No")
+ans$prox_enhc <- ifelse(ans$annotation %like% "pELS","Yes","No")
+ans$dist_enhc <- ifelse(ans$annotation %like% "dELS","Yes","No")
+ans$promoter <- ifelse(ans$annotation %like% "PLS","Yes","No")
+
+#making a counts table
+dna_counts[["CTCF"]] <- ans[ctcf=="Yes" ,.N, by=.(interaction, gene_biotype, signif)]
+dna_counts[["prox_enhc"]] <- ans[prox_enhc=="Yes" ,.N, by=.(interaction, gene_biotype, signif)]
+dna_counts[["dist_enhc"]] <- ans[dist_enhc=="Yes" ,.N, by=.(interaction, gene_biotype,signif)]
+dna_counts[["promoter"]] <- ans[promoter=="Yes",.N, by=.(interaction, gene_biotype, signif)]
+annot_counts <- rbind(dna_counts$CTCF, dna_counts$prox_enhc,dna_counts$dist_enhc,dna_counts$promoter)
+annot_counts <- na.omit(annot_counts)
+#adding type of dna annot to the counts table
+annot_counts$type <- c(rep("CTCF",18), rep("prox_enhc",16), rep("dist_enhc",19),rep("promoter",15))
+
+
+
+
+
+
+#lst <- lapply(All_News, unlist)
+#data.frame(lapply(lst, `length<-`, max(lengths(lst))))
+
+#find the interactions for MALAT1
+```
+
+
+
+
+```{r,eval=FALSE}
+#making the plot of distribution of annotations
+MALAT1 <- merged_runs[merged_runs$bait_name %in% c("MALAT1","TALAM1"),]
+MALAT1 <- MALAT1[,c("target.id","bait.id","count")]
+GAPDH <- merged_runs[merged_runs$bait_name=="GAPDH",]
+
+ggplot(annot_counts[annot_counts$signif=="significant",],aes(x=type,y=N,fill=type)) +
+    geom_bar(stat="identity")+
+    facet_wrap(~interaction)+
+    theme_cowplot()+
+    scale_fill_viridis(discrete = T)+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position="none")+
+    xlab("")+
+    ylab("Counts")+
+  scale_x_discrete(labels=c("CTCF","Distal Enhc","Promoter","Proximal Enhc"))
+
+
+
+
+#splitting the plot based on coding/nonCoding rna
+ComplexHeatmap::Heatmap(as.matrix(annot_counts[annot_counts$interaction=="cis",2:4] %>% spread(gene_biotype, N, fill = 0)),
+                        column_names_side = "bottom",
+                        cluster_rows = T,
+                        cluster_columns = F,
+                        column_names_rot = 45,
+                        column_names_gp = gpar(fontsize=7),
+                        row_names_gp = gpar(fontsize=6),
+                        row_names_rot = 0,
+                        name = " ",width = 4*unit(25,'mm'),
+                        column_title = "T-cell activation genes shRNA Ifn vs Dox")
+
+
+ggplot(annot_counts[annot_counts$interaction=="cis" & annot_counts$signif=="significant",],aes(x = gene_biotype,y = type))+
+  geom_tile(aes(fill=N))+
+  geom_text(aes(label=N))+
+  scale_fill_viridis()
+
+ggplot(annot_counts[annot_counts$signif=="significant",],aes(x = gene_biotype,y = type))+
+    geom_tile(aes(fill=N))+
+    geom_text(aes(label=N))+facet_wrap(~interaction)+
+    scale_fill_viridis()
+```
+
+```{r,echo=FALSE,eval=FALSE}
+#make circ plot
+
+
+set.seed(123)
+bed1 = generateRandomBed(nr = 100)
+bed1 = bed1[sample(nrow(bed1), 20), ]
+bed2 = generateRandomBed(nr = 100)
+bed2 = bed2[sample(nrow(bed2), 20), ]
+bed1 <- MALAT1[q.value<0.05,c("target.chr","target.start","target.end","count")]
+bed2 <- MALAT1[q.value<0.05,c("bait.chr","bait.start","bait.end","count")]
+
+circos.clear()
+circos.initializeWithIdeogram()
+circos.genomicLink(bed1, bed2, col = "black",lwd = 0.1)
+
+circos.genomicLink(MALAT1[,c("target.chr","target.start","target.end","count")],
+                   MALAT1[,c("bait.chr","bait.start","bait.end","count")], col="black", lwd=0.5)
+### Labels for inversely changing DMRs with DEG
+```
+
+
+
+```{r,eval=FALSE}
+library(circlize)
+library(gtools)
+library(dplyr)
+om = circos.par("track.margin")
+oc = circos.par("cell.padding")
+circos.par(track.margin = c(0, 0), cell.padding = c(0, 0, 0, 0))
+circos.par(start.degree = -250)
+circos.initializeWithIdeogram(track.height = 0.05)
+### Labels for inversely changing DMRs with DEG
+#' circos.genomicLabels(Gene_Labels, labels.column=4, side='outside', cex=0.38)
+## Add CpG Island Lines here (blocks to tell the reader where the CpG Islands are located?)
+# Methylation Density
+DMR.PerChange<-select(GAPDH, chrom=target.chr,
+                      chromStart=target.start, perc.change=count, chromEnd=target.end)
+#' DMR.PerChange<-mutate(DMR.PerChange, chromEnd=chromStart+1)
+DMR.PerChange<-select(DMR.PerChange, chrom, chromStart, chromEnd, perc.change)
+DMR.PerChange$chrom<-factor(DMR.PerChange$chrom, levels=c("chr1", "chr2", "chr3", "chr4",
+"chr5", "chr6", "chr7", "chr8",
+"chr9", "chr10", "chr11", "chr12",
+"chr13", "chr14", "chr15", "chr16",
+"chr17", "chr18", "chr19", "chr20",
+"chr21", "chr22", "chr23", "chrX",
+"chrY"))
+DMR.PerChange<-DMR.PerChange[order(DMR.PerChange$chrom),]
+#Methyl.UP<-filter(DMR.PerChange, perc.change>0)
+#Methyl.DOWN<-filter(DMR.PerChange, perc.change<0)
+#Methyl.List<-list(Methyl.UP, Methyl.DOWN)
+circos.genomicDensity(GAPDH, col=c("#FF000080", "darkgreen"),
+                      track.height=0.1, bg.border=NA)
+##DEG with inverse GPI Islands Promoters
+#circos.genomicTrackPlotRegion(Gene_FoldChange_List,
+
+circos.par(track.margin=om, cell.padding=oc)
+## Add link for all DEGs with DMRs in promoter CGIs
+Link_Anchor <- read.csv("../1_Input/4_Combined/Circos/Link_Anchor.csv")
+Link<-read.csv("../1_Input/4_Combined/Circos/Link_DEG.DMR_Promoter.CGI_P<0.05.csv")
+Link$chrom<-factor(Link$chrom, levels=c("chr1", "chr2", "chr3", "chr4",
+"chr5", "chr6", "chr7", "chr8",
+"chr9", "chr10", "chr11", "chr12",
+"chr13", "chr14", "chr15", "chr16",
+"chr17", "chr18", "chr19", "chr20",
+"chr21", "chr22", "chr23", "chrX",
+"chrY"))
+Link<-Link[order(Link$chrom),]
+Link_Anchor<-Link_Anchor[1:nrow(Link),]
+circos.genomicLink(Link, Link_Anchor, col="black", lwd=0.5)
+circos.clear()
+
+```
+
+
+```{r,eval=FALSE}
+interaction_data <- data.frame(
+  chr1 = c("chr1", "chr1", "chr2", "chr2", "chr3", "chr4"),
+  start1 = c(10000, 20000, 30000, 40000, 50000, 60000),
+  end1 = c(15000, 25000, 35000, 45000, 55000, 65000),
+  chr2 = c("chr2", "chr3", "chr3", "chr4", "chr1", "chr1"),
+  start2 = c(30000, 40000, 50000, 60000, 10000, 20000),
+  end2 = c(35000, 45000, 55000, 65000, 15000, 25000)
+)
+
+
+
+# Generate sample interaction data
+# Replace with your actual interaction data
+interaction_data <- data.frame(
+  set1 = c("A", "A", "B", "B", "C", "D"),
+  set2 = c("B", "C", "C", "D", "A", "A"),
+  count = c(5, 3, 2, 4, 6, 1)
+)
+
+# Create a circos plot using chordDiagram
+chord_data <- chordDiagram(interaction_data, 
+                           grid.col = rainbow(length(unique(interaction_data$set1))))
+
+# Customize the circos plot
+circos.clear()
+circos.par(track.height = 0.05)
+circos.initializeWithIdeogram()
+
+# Set the order and colors of the sets
+sets <- unique(c(interaction_data$set1, interaction_data$set2))
+set_order <- match(sets, interaction_data$set1)
+set_colors <- rainbow(length(sets))
+
+# Add the links to the circos plot
+for (i in 1:nrow(chord_data)) {
+  circos.link(
+    chord_data$rn[i], chord_data$o1[i], chord_data$cn[i], chord_data$o2[i],
+    col = set_colors[chord_data$rn[i]], border = set_colors[chord_data$cn[i]],
+    lwd = 2
+  )
+}
+
+# Add ideograms for the sets
+circos.genomicIdeogram(
+  cytoband = NULL,
+  species = NULL,
+  track.height = 0.05,
+  track.margin = c(0.05, 0.05)
+)
+
+```
+
+```{r,eval=FALSE}
+om = circos.par("track.margin")
+oc = circos.par("cell.padding")
+circos.par(track.margin = c(0, 0), cell.padding = c(0, 0, 0, 0))
+circos.par(start.degree = -250)
+circos.initializeWithIdeogram()
+### Labels for inversely changing DMRs with DEG
+#circos.genomicLabels(Gene_Labels, labels.column=4, side='outside', cex=0.38)
+## Add CpG Island Lines here (blocks to tell the reader where the CpG Islands are located?)
+# Methylation Density
+DMR.PerChange<-MALAT1[, c("target.chr","target.start","target.end","count")]
+
+
+DMR.PerChange$chrom<-factor(DMR.PerChange$target.chr, levels=c("chr1", "chr2", "chr3", "chr4","chr5",
+                                                          "chr6", "chr7", "chr8","chr9", "chr10",
+                                                          "chr11","chr12","chr13", "chr14","chr15",
+                                                          "chr16","chr17", "chr18", "chr19","chr20",
+                                                          "chr21", "chr22", "chr23", "chrX","chrY"))
+DMR.PerChange<-DMR.PerChange[order(DMR.PerChange$chrom),]
+# Methyl.UP<-filter(DMR.PerChange, perc.change>0)
+# Methyl.DOWN<-filter(DMR.PerChange, perc.change<0)
+# Methyl.List<-list(Methyl.UP, Methyl.DOWN)
+#' circos.genomicDensity(DMR.PerChange, col=c("#FF000080", "darkgreen"),track.height=0.1, bg.border=NA)
+##DEG with inverse GPI Islands Promoters
+circos.genomicTrackPlotRegion(DMR.PerChange[,1:4],ylim = c(-4, 4), bg.border=NA,
+                              panel.fun = function(region, value, ...) {col = ifelse(value[[1]] > 0, "darkgoldenrod1", "blue")
+                              circos.genomicPoints(region, value, col = col, cex = 0.8, pch = 16)
+                              cell.xlim = get.cell.meta.data("cell.xlim")
+                              for(h in c(-4, -2, 0, 2, 4)) {
+                                circos.lines(cell.xlim, c(h, h), col ="#00000040")
+                                }
+                              }, track.height = 0.1)
+circos.par(track.margin=om, cell.padding=oc)
+## Add link for all DEGs with DMRs in promoter CGIs
+Link_Anchor <- read.csv("../1_Input/4_Combined/Circos/Link_Anchor.csv")
+Link<-read.csv("../1_Input/4_Combined/Circos/Link_DEG.DMR_Promoter.CGI_P<0.05.csv")
+Link$chrom<-factor(Link$chrom, levels=c("chr1", "chr2", "chr3", "chr4",
+"chr5", "chr6", "chr7", "chr8",
+"chr9", "chr10", "chr11", "chr12",
+"chr13", "chr14", "chr15", "chr16",
+"chr17", "chr18", "chr19", "chr20",
+"chr21", "chr22", "chr23", "chrX",
+"chrY"))
+Link<-Link[order(Link$chrom),]
+Link_Anchor<-Link_Anchor[1:nrow(Link),]
+circos.genomicLink(MALAT1[,c("target.chr","target.start","target.end","count")],
+                   MALAT1[,c("bait.chr","bait.start","bait.end","count")], col="black", lwd=0.5)
+circos.clear()
+
+```
