@@ -45,22 +45,22 @@ library(slickR)
 library(svglite)
 library(scales)
 library(reticulate)
-library(bedtoolsr)
+#library(bedtoolsr)
 #library(ggpubr)
 ```
 
 
 ```{r,echo=FALSE, message=FALSE}
-load("~/Radicl_Seq/Normalised_2kb_Split/Norm_bin_coding_nc.RData")
+load("~/Radicl_Seq/Normalised_2kb_Split/Norm_2kb.RData")
 # control_coding <- data.table::fread("../../2kb/control_coding.txt", header = T, sep = ",")
 # control_nc <- data.table::fread("../../2kb/control_nc.txt")
 # ICM_coding <- data.table::fread("../../2kb/ICM_coding.txt")
 # ICM_nc <- data.table::fread("../../2kb/ICM_nc.txt")
-control_coding <- control_coding_2kb
-control_nc <- control_nc_2kb
-ICM_coding <- ICM_coding_2kb
-ICM_nc <- ICM_nc_2kb
-rm(control_coding_2kb, control_nc_2kb, ICM_coding_2kb, ICM_nc_2kb)
+#control_coding <- control_coding_2kb
+control_nc <- control_nonCoding
+#ICM_coding <- ICM_coding_2kb
+ICM_nc <- ICM_nonCoding
+rm(control_nonCoding, ICM_nonCoding)
 gc()
 
 qc_check <- function(significant_results){
@@ -69,7 +69,8 @@ qc_check <- function(significant_results){
   trans.prop <- sum(is.na(significant_results$distance))/total
   cis.prop <- sum(!is.na(significant_results$distance))/total
   b2b.prop <- sum(significant_results$bait.to.bait)/total
-  int.data <- c('trans' = percent(trans.prop), 'cis' = percent(cis.prop),  'bait.to.bait' = percent(b2b.prop))
+  int.data <- c('trans' = percent(trans.prop), 'cis' = percent(cis.prop),
+                'bait.to.bait' = percent(b2b.prop))
   print(int.data)
 }
 
@@ -118,7 +119,7 @@ ICM_coding$type <- as.factor("ICM Coding")
 ICM_nc$type <- as.factor("ICM NonCoding")
 merged_runs <- rbind(control_coding, control_nc,
                      ICM_coding,ICM_nc)
-merged_runs$signif <- ifelse(merged_runs$q.value<0.05, "significant","non-significant")
+merged_runs$signif <- ifelse(merged_runs$q.value<0.05, TRUE,FALSE)
 merged_runs$frag.length <- merged_runs$target.end-merged_runs$target.start
 merged_runs$bait.length <- merged_runs$bait.end-merged_runs$bait.start
 
@@ -437,7 +438,7 @@ merged_runs[!is.na(distance),interaction:="cis"]
 genes <- unique(merged_runs$bait_name)
 
 mart <- useMart("ENSEMBL_MART_ENSEMBL", host = "https://asia.ensembl.org")
-mart <- useDataset("mmusculus_gene_ensembl", mart)
+mart <- useDataset("hsapiens_gene_ensembl", mart)
 annotLookup <- getBM(
   mart = mart,
   attributes = c(
@@ -560,26 +561,26 @@ ggplot(merged_counts,aes(x=gene_biotype_hl,y=prop,fill=gene_biotype_hl)) +
 
 
 
-```{r, eval=FALSE, echo=FALSE}
-ICM_coding_norm <- data.table::fread("../../Normalised_2kb_Split/ICM_coding.txt")
-ICM_coding_raw <-data.table::fread("../../Raw_2kb_Split/ICM_coding.txt")
-ICM_merged <- inner_join(ICM_coding_norm,ICM_coding_raw, by=join_by(target.id, bait.id))
-ICM_merged$bait.len <- ICM_merged$bait.end.y-ICM_merged$bait.start.y
-ICM_merged[,bait_name := baits$bait_name[match(ICM_merged$bait.start.x,baits$start)]]
-ICM_merged <- ICM_merged[,c("target.id","bait.id","distance.x","distance.y","count.x","count.y","bait.trans.count.x",
-                            "target.trans.count.x","q.value.x","q.value.y","bait.len", "bait_name")]
-
-
-ggplot(ICM_merged, aes(x=log10(bait.len),y=count.x))+
-  geom_density()
-
-df <- ICM_merged %>% gather(qvalue, var, q.value.x:q.value.y)
-
-df <- ICM_merged[,c("bait.len","q.value.x", "q.value.y")]%>%
-  pivot_longer(., cols = c(q.value.x, q.value.y),
-               names_to = "Var", values_to = "Val") %>%
-  as.data.table()
-
+```{r,eval=FALSE,echo=FALSE}
+# ICM_coding_norm <- data.table::fread("../../Normalised_2kb_Split/ICM_coding.txt")
+# ICM_coding_raw <-data.table::fread("../../Raw_2kb_Split/ICM_coding.txt")
+# ICM_merged <- inner_join(ICM_coding_norm,ICM_coding_raw, by=join_by(target.id, bait.id))
+# ICM_merged$bait.len <- ICM_merged$bait.end.y-ICM_merged$bait.start.y
+# ICM_merged[,bait_name := baits$bait_name[match(ICM_merged$bait.start.x,baits$start)]]
+# ICM_merged <- ICM_merged[,c("target.id","bait.id","distance.x","distance.y","count.x","count.y","bait.trans.count.x",
+#                             "target.trans.count.x","q.value.x","q.value.y","bait.len", "bait_name")]
+# 
+# 
+# ggplot(ICM_merged, aes(x=log10(bait.len),y=count.x))+
+#   geom_density()
+# 
+# df <- ICM_merged %>% gather(qvalue, var, q.value.x:q.value.y)
+# 
+# df <- ICM_merged[,c("bait.len","q.value.x", "q.value.y")]%>%
+#   pivot_longer(., cols = c(q.value.x, q.value.y),
+#                names_to = "Var", values_to = "Val") %>%
+#   as.data.table()
+# 
 
 
 
@@ -591,22 +592,92 @@ ggplot(merged_runs[merged_runs$bait_name=="TALAM1",],
     facet_wrap(~type)
 
 ```
+## Annotating the interactions for cis-regulatory elements
+Using the data from SCREEN:Search Candidate cis-Regulatory Elements by ENCODE, the output from Chicane is overlapped with annotation data. First start of by looking at the overlap between RNA types and annotation status and the plot for all the interactions
 
 
-```{r,eval=FALSE}
+```{r,eval=TRUE}
 #import in the annotation file
 
-DNA_annot <- data.table::fread("../../GRCh38-cCREs.bed")
-CTCF_reg <- DNA_annot[DNA_annot$V6 %like% "CTCF",]
+DNA_annot <- data.table::fread("~/Radicl_Seq/GRCh38-cCREs.bed")
+#decide which annotation to use for CTCF, either CTCF-bound or CTCF-only
+CTCF_reg <- DNA_annot[DNA_annot$V6 %like% "CTCF-only",]
+CTCF_reg$type <- "CTCF_reg"
 prox_enh_reg <- DNA_annot[DNA_annot$V6 %like% "pELS",]
+prox_enh_reg$type <- "Proximal enh_reg"
 dist_enh_reg <- DNA_annot[DNA_annot$V6 %like% "dELS",]
+dist_enh_reg$type <- "Distal enh_reg"
 promoter_reg <- DNA_annot[DNA_annot$V6 %like% "PLS",]
+promoter_reg$type <- "Promoter_reg"
 dnase_h3k4me3_red <- DNA_annot[DNA_annot$V6 %like% "DNase-H3K4me3",]
+dnase_h3k4me3_red$type <- "H3K4Me3_reg"
+df <- rbind(CTCF_reg,prox_enh_reg,dist_enh_reg,promoter_reg,dnase_h3k4me3_red)
+df <- df[,c(1:3,7)]
+names(df) <- c("chr","start","end","annot")
+g = GenomicRanges::makeGRangesFromDataFrame(
+     df, 
+     keep.extra.columns=T, 
+     starts.in.df.are.0based=FALSE,
+     ignore.strand=is.null(NULL))
+annot_grlist <- GenomicRanges::split(g, g$annot, drop = T)
+#make granges from chicane output
+gres.col <- c("target.chr","target.start","target.end","signif","interaction","gene_biotype_hl","control")
+gres = GenomicRanges::makeGRangesFromDataFrame(
+    res_biotyp[res_biotyp$type=="Control NonCoding",..gres.col], 
+    keep.extra.columns=TRUE, 
+    starts.in.df.are.0based=FALSE,
+    ignore.strand=TRUE)
+gres_list <- GenomicRanges::split(gres,gres$gene_biotype_hl, drop = T)
+res_list <- NULL
+res_list[["cis"]] <- split(gres_list@unlistData[gres_list@unlistData$interaction=="cis"],gres_list@unlistData$gene_biotype_hl,drop = T)
+res_list[["trans"]] <- split(gres_list@unlistData[gres_list@unlistData$interaction=="trans"],gres_list@unlistData$gene_biotype_hl,drop = T)
+res_list[["sig"]] <- split(gres_list@unlistData[gres_list@unlistData$signif=="TRUE"],gres_list@unlistData$gene_biotype_hl,drop = T)
+res_list[["nonsig"]] <- split(gres_list@unlistData[gres_list@unlistData$signif=="FALSE"],gres_list@unlistData$gene_biotype_hl,drop = T)
+
+
+rm(gres)
+#now get overlap with ChromHMM annotation data - target is radicl-seq data
+annotation <- 
+    genomation::annotateWithFeatures(gres_list, annot_grlist)
+#interested in percentage of target elements overlapping with features:
+#make a heatmap
+#don't produce heatmap, take matrix, standardise and replot
+annot_mtrx <- genomation::heatTargetAnnotation(annotation,plot=FALSE)
+
+
+#conver to df
+annot_df<-reshape2::melt(annot_mtrx)
+names(annot_df) <- c("GeneType","State","Overlap")
+
+ggplot(annot_df,aes(x=State,y=`GeneType`,fill=Overlap))+
+  geom_tile()+theme_cowplot()+scale_fill_viridis_c()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  scale_x_discrete(labels=c("CTCF","Distal Enhc","DNase-H3K4me3","Promoter","Proximal Enhc"))
+  
+```
+When looking overall, distal regions are most enriched however the counts are next normalized to annotation type
+
+## Normalize the counts across states
+
+```{r}
+#very little notable difference in each state for diff q-values
+#try standardising across states
+scl_annot_mtrx <- (apply(annot_mtrx,1,rescale,to=c(-1,1)))
+#scl_annot_mtrx <-apply(annot_mtrx,2,function(x) scale(x)[,1])
+#plot
+scl_annot_df<-reshape2::melt(scl_annot_mtrx)
+names(scl_annot_df) <- c("GeneType","State","Overlap")
+ggplot(scl_annot_df,aes(x=GeneType,y=`State`,fill=Overlap))+
+     geom_tile()+theme_cowplot()+scale_fill_viridis_c()+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+    scale_x_discrete(labels=c("CTCF","Distal Enhc","DNase-H3K4me3","Promoter","Proximal Enhc"))
+
+
 #intersect with the DNA loc file
-options(bedtools.path = "~/bedtools2/bin/")
-DNA_loc <- merged_runs[,c("target.chr","target.start","target.end")]
+#options(bedtools.path = "~/bedtools2/bin/")
+#DNA_loc <- merged_runs[,c("target.chr","target.start","target.end")]
 #write the output of dna loc
-fwrite(DNA_loc, file = "~/Radicl_Seq/Norm_merged_runs_dna.tsv", sep = "\t", quote = F, col.names = F, row.names = F)
+#fwrite(DNA_loc, file = "~/Radicl_Seq/mm10/Norm_merged_runs_dna.tsv", sep = "\t", quote = F, col.names = F, row.names = F)
 #perform bedtools intersect in terminal
 #ans <- bedtoolsr::bt.intersect(a=DNA_loc,
 #                               b=CTCF_reg,
@@ -616,18 +687,105 @@ fwrite(DNA_loc, file = "~/Radicl_Seq/Norm_merged_runs_dna.tsv", sep = "\t", quot
 
 ```
 
+## Normalize the counts across RNA types
+
+```{r}
+scl_annot_mtrx <-apply(annot_mtrx,2,function(x) scale(x)[,1])
+#plot
+scl_annot_df<-reshape2::melt(scl_annot_mtrx)
+names(scl_annot_df) <- c("GeneType","State","Overlap")
+ggplot(scl_annot_df,aes(x=State,y=`GeneType`,fill=Overlap))+
+     geom_tile()+theme_cowplot()+scale_fill_viridis_c()+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+    scale_x_discrete(labels=c("CTCF","Distal Enhc","DNase-H3K4me3","Promoter","Proximal Enhc"))
+
+```
+
+If we only keep the major RNA types we see
+```{r}
+scl_annot_mtrx <-apply(annot_mtrx[c(1,4,5,7),],2,function(x) scale(x)[,1])
+#plot
+scl_annot_df<-reshape2::melt(scl_annot_mtrx)
+names(scl_annot_df) <- c("GeneType","State","Overlap")
+ggplot(scl_annot_df,aes(x=State,y=`GeneType`,fill=Overlap))+
+     geom_tile()+theme_cowplot()+scale_fill_viridis_c()+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+    scale_x_discrete(labels=c("CTCF","Distal Enhc","DNase-H3K4me3","Promoter","Proximal Enhc"))
+
+```
+
+
+
+## Annotation for significant interaction
+
+```{r}
+annotation_extra <- NULL
+annotation_extra[["cis"]] <- genomation::annotateWithFeatures(res_list$cis,annot_grlist)
+annotation_extra[["trans"]] <- genomation::annotateWithFeatures(res_list$trans,annot_grlist)
+annotation_extra[["sig"]] <- genomation::annotateWithFeatures(res_list$sig,annot_grlist)
+annotation_extra[["nonsig"]] <- genomation::annotateWithFeatures(res_list$nonsig,annot_grlist)
+res_annot_mtrx <- NULL
+res_annot_mtrx[["cis"]] <- genomation::heatTargetAnnotation(annotation_extra$cis,plot = F)
+res_annot_mtrx[["trans"]] <- genomation::heatTargetAnnotation(annotation_extra$trans,plot=F)
+res_annot_mtrx[["sig"]] <- genomation::heatTargetAnnotation(annotation_extra$sig,plot = F)
+res_annot_mtrx[["nonsig"]] <- genomation::heatTargetAnnotation(annotation_extra$nonsig,plot = F)
+
+res_annot_df<-reshape2::melt(res_annot_mtrx)
+names(res_annot_df) <- c("GeneType","State","Overlap","Type")
+
+ggplot(res_annot_df[res_annot_df$Type %in% c("cis","trans"),],aes(x=State,y=`GeneType`,fill=Overlap))+
+   geom_tile()+theme_cowplot()+scale_fill_viridis_c()+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  facet_wrap(~Type)+
+  ggtitle("All interactions")+
+  scale_x_discrete(labels=c("CTCF","Distal Enhc","DNase-H3K4me3","Promoter","Proximal Enhc"))
+
+ggplot(res_annot_df[res_annot_df$Type=="sig",],aes(x=State,y=`GeneType`,fill=Overlap))+
+   geom_tile()+theme_cowplot()+scale_fill_viridis_c()+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ggtitle("Significant interactions")+
+  scale_x_discrete(labels=c("CTCF","Distal Enhc","DNase-H3K4me3","Promoter","Proximal Enhc"))
+```
+
+
+
+
+
+
+```{r,eval=FALSE}
+
+#res_biotyp[,bait.length:=bait.end-bait.start]
+res_biotyp[,stnd_dist:=distance/bait.len]
+
+ggplot(res_biotyp[q.value<0.05 & interaction=="cis" & 
+                      (!gene_biotype_hl %in% c("IG_gene","TR_gene"))], 
+       aes(x=gene_biotype_hl,y=log(stnd_dist,base=10),fill=gene_biotype_hl)) +
+    geom_violin(trim=FALSE)+
+    geom_boxplot(width=0.1)+
+    theme_cowplot()+
+    scale_fill_viridis(discrete=T,alpha=0.5)+
+    theme(legend.position="none")+
+    ylab("Log 10 Distance from Interaction to RNA")+
+    xlab("Interaction Type")#+
+
+```
+
+
 ```{bash, eval=F,echo=F}
 bedtools intersect -a Norm_merged_runs_dna.tsv -b GRCh38-cCREs.bed -wa -wb | cut -f1,2,3,9 | awk '!x[$0]++' | tr ' ' '\t' > /scratch1/users/shashank.tiwari/Radicl_Seq/DNA_annot.tsv
 
 
 ```
 
+## Distribution of total counts for DNA annotations
 
-```{r,eval=FALSE}
+Plotting the distribution of dna-annotation distribution only for significant interactions, split on the basis of cis and trans interactions
+
+```{r,eval=TRUE,echo=FALSE}
 #ans <- ans[,c(1,2,3,9)]
 #ans <- ans[!duplicated(ans),]
 # read in the annotated file
-ans <- fread("~/Radicl_Seq/mm10_DNA_annot.tsv")
+ans <- fread("~/Radicl_Seq/DNA_annot.bed")
 #add annotation results to RadiclSeq results
 colnames(ans) <- c("chr","start","end","annotation")
 ans$target.id <- paste0(ans$chr,":",ans$start,"-",ans$end)
@@ -646,34 +804,257 @@ ans$ctcf <- ifelse(ans$annotation %like% "CTCF", "Yes","No")
 ans$prox_enhc <- ifelse(ans$annotation %like% "pELS","Yes","No")
 ans$dist_enhc <- ifelse(ans$annotation %like% "dELS","Yes","No")
 ans$promoter <- ifelse(ans$annotation %like% "PLS","Yes","No")
-
+ans$H3K4Me3 <- ifelse(ans$annotation %like% "DNase","Yes","No")
+dna_counts <- NULL
 #making a counts table
 dna_counts[["CTCF"]] <- ans[ctcf=="Yes" ,.N, by=.(interaction, gene_biotype, signif)]
 dna_counts[["prox_enhc"]] <- ans[prox_enhc=="Yes" ,.N, by=.(interaction, gene_biotype, signif)]
 dna_counts[["dist_enhc"]] <- ans[dist_enhc=="Yes" ,.N, by=.(interaction, gene_biotype,signif)]
 dna_counts[["promoter"]] <- ans[promoter=="Yes",.N, by=.(interaction, gene_biotype, signif)]
-annot_counts <- rbind(dna_counts$CTCF, dna_counts$prox_enhc,dna_counts$dist_enhc,dna_counts$promoter)
+dna_counts[["H3K3Me3"]] <- ans[H3K4Me3=="Yes",.N, by=.(interaction, gene_biotype, signif)]
+annot_counts <- rbind(dna_counts$CTCF, dna_counts$prox_enhc,dna_counts$dist_enhc,dna_counts$promoter,dna_counts$H3K3Me3)
 annot_counts <- na.omit(annot_counts)
 #adding type of dna annot to the counts table
-annot_counts$type <- c(rep("CTCF",18), rep("prox_enhc",16), rep("dist_enhc",19),rep("promoter",15))
+annot_counts$type <- c(rep("CTCF",18), rep("prox_enhc",16), rep("dist_enhc",19),rep("promoter",15),rep("H3K4Me3",14))
 
-
-
-
-
-
-#lst <- lapply(All_News, unlist)
-#data.frame(lapply(lst, `length<-`, max(lengths(lst))))
-
-#find the interactions for MALAT1
 ```
 
 
 
 
-```{r,eval=FALSE}
+```{r}
+ggplot(annot_counts[annot_counts$signif==TRUE],aes(x=type,y=N,fill=type)) +
+    geom_bar(stat="identity")+
+    facet_wrap(~interaction)+
+    theme_cowplot()+
+    scale_fill_viridis(discrete = T)+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position="none")+
+    xlab("")+
+    ylab("Counts")+
+  scale_x_discrete(labels=c("CTCF","Distal Enhc","DNase-H3K4me3","Promoter","Proximal Enhc"))+
+  ggtitle("Significant Interactions")
+
+```
+Looking at distribution of only non-significant interactions
+
+```{r nonsig interactions, echo=FALSE}
+ggplot(annot_counts[annot_counts$signif==FALSE],aes(x=type,y=N,fill=type)) +
+    geom_bar(stat="identity")+
+    facet_wrap(~interaction)+
+    theme_cowplot()+
+    scale_fill_viridis(discrete = T)+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position="none")+
+    xlab("")+
+    ylab("Counts")+
+  scale_x_discrete(labels=c("CTCF","Distal Enhc","DNase-H3K4me3","Promoter","Proximal Enhc"))
+
+```
+
+
+Lastly the interactions for protein coding and noncoding RNAs are plotted.
+
+
+```{r pc/ncRNA dnaAnnot}
+pc <- ggplot(annot_counts[annot_counts$gene_biotype=="pcRNA"],aes(x=type,y=N,fill=type)) +
+    geom_bar(stat="identity")+
+    facet_wrap(~interaction)+
+    theme_cowplot()+
+    scale_fill_viridis(discrete = T)+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position="none")+
+    xlab("")+
+    ylab("Counts")+
+  facet_wrap(~interaction)+
+  scale_x_discrete(labels=c("CTCF","Distal Enhc","DNase-H3K4me3","Promoter","Proximal Enhc"))+
+  ggtitle("Protein Coding Genes")
+
+nc <- ggplot(annot_counts[annot_counts$gene_biotype=="ncRNA"],aes(x=type,y=N,fill=type)) +
+    geom_bar(stat="identity")+
+    facet_wrap(~interaction)+
+    theme_cowplot()+
+    scale_fill_viridis(discrete = T)+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position="none")+
+    xlab("")+
+    ylab("Counts")+
+  facet_wrap(~interaction)+
+  scale_x_discrete(labels=c("CTCF","Distal Enhc","DNase-H3K4me3","Promoter","Proximal Enhc"))+
+  ggtitle("Non Coding Genes")
+
+
+pc = xmlSVG({show(pc)}, standalone = TRUE)  
+nc = xmlSVG({show(nc)}, standalone = TRUE)  
+#p3 = xmlSVG({show(p3)}, standalone = TRUE)  
+
+slickR(list(pc,nc))+settings(dots=TRUE,autoplay = TRUE)
+
+```
+
+
+## Compare chicane results to binomial model
+
+I ran the binomial model from the original RadiclSeq publication for the ICM samples of the current data set. One of the first things to notice was the difference in the numbers of significant interactions from the different models. The binomial model classifies a lot more interactions as significant,however on looking closely we see that instead of the data being binned into 
+
+```{r loadRes}
+#load the results from binomial run
+icm_binom_all <- data.table::fread("~/RADICL_analysis/2kb/ICM_rna_dna_allInteractions.tsv")
+icm_binom_all$signif <- ifelse(icm_binom_all$fdr.tsc<0.05, TRUE,FALSE)
+icm_binom_all$frag.length <- icm_binom_all$end.D-icm_binom_all$start.D
+icm_binom_all$bait.length <- icm_binom_all$end.R-icm_binom_all$start.R
+
+
+#make bins split res by qvalue bins
+icm_binom_all <- icm_binom_all[!is.na(icm_binom_all$fdr.tsc),]
+icm_binom_all[,q_bin:=cut(fdr.tsc, breaks=c(0,0.05,0.2,0.4,0.6,0.8,1),include.lowest=TRUE),]
+icm_stretch_cis <- icm_binom_all[!is.na(distance),.(count2=1:Count),names(icm_binom_all)] 
+
+
+
+```
+
+
+
+
+
+```{r}
+plot_binom <- ggplot(icm_stretch_cis, aes(log(distance,base=10))) +
+    geom_density(alpha = 0.1)+theme_cowplot()+
+    scale_fill_viridis(name="Adj. P-value Bin",discrete=T)+
+    scale_colour_viridis(name="Adj. P-value Bin",discrete=T)+
+    geom_vline(xintercept=log(24000000,base=10), colour="grey") +
+    geom_vline(xintercept=log(500000,base=10), colour="grey") +
+    annotate(x=log(24000000,base=10),y=2,label="24Mb",vjust=2,geom="label")+
+    annotate(x=log(500000,base=10),y=2,label="500Kb",vjust=2,geom="label")+
+    xlab("Log 10 Distance from Interaction to RNA")+
+  ggtitle("Binomial Model")
+
+plot_chic <- ggplot(merged_stretch_cis[merged_stretch_cis$type %in% c("ICM NonCoding","ICM Coding"),], aes(log(distance,base=10))) +
+    geom_density(alpha = 0.1)+theme_cowplot()+
+    scale_fill_viridis(name="Adj. P-value Bin",discrete=T)+
+    scale_colour_viridis(name="Adj. P-value Bin",discrete=T)+
+    geom_vline(xintercept=log(24000000,base=10), colour="grey") +
+    geom_vline(xintercept=log(500000,base=10), colour="grey") +
+    annotate(x=log(24000000,base=10),y=2,label="24Mb",vjust=2,geom="label")+
+    annotate(x=log(500000,base=10),y=2,label="500Kb",vjust=2,geom="label")+
+    xlab("Log 10 Distance from Interaction to RNA")+
+  ggtitle("Chicane Model")
+
+
+binom = xmlSVG({show(plot_binom)}, standalone = TRUE)  
+chic = xmlSVG({show(plot_chic)}, standalone = TRUE)  
+#p3 = xmlSVG({show(p3)}, standalone = TRUE)  
+
+slickR(list(binom,chic))+settings(dots=TRUE,autoplay = TRUE)
+```
+
+```{r}
+#merged_runs[,bait_name := baits$bait_name[match(merged_runs$bait.start,baits$start)]]
+
+
+plot_binom <- ggplot(icm_stretch_cis,aes(log(distance,base = 10),
+                              fill=q_bin,colour=q_bin))+
+  geom_density(alpha=0.1) + theme_cowplot() +
+  scale_fill_viridis(name="Adj P-value bin", discrete=T)+
+  scale_colour_viridis(name="Adj P-value bin", discrete=T)+
+  geom_vline(xintercept = log(24000000,base = 10), colour="grey")+
+  geom_vline(xintercept = log(500000,base = 10), colour="grey") +
+  annotate(x=log(24000000,base = 10), y=2, label="24Mb",vjust=2,geom = "label") +
+  annotate(x=log(500000,base = 10), y=2, label="500kb",vjust=2,geom = "label") +
+  xlab("Log 10 Distance from interaction to RNA")+
+  ggtitle("Binomial Model")
+
+plot_chic <- ggplot(merged_stretch_cis,aes(log(distance,base = 10),
+                              fill=q_bin,colour=q_bin))+
+  geom_density(alpha=0.1) + theme_cowplot() +
+  scale_fill_viridis(name="Adj P-value bin", discrete=T)+
+  scale_colour_viridis(name="Adj P-value bin", discrete=T)+
+  geom_vline(xintercept = log(24000000,base = 10), colour="grey")+
+  geom_vline(xintercept = log(500000,base = 10), colour="grey") +
+  annotate(x=log(24000000,base = 10), y=2, label="24Mb",vjust=2,geom = "label") +
+  annotate(x=log(500000,base = 10), y=2, label="500kb",vjust=2,geom = "label") +
+  xlab("Log 10 Distance from interaction to RNA")+
+  ggtitle("Chicane Model")
+
+binom = xmlSVG({show(plot_binom)}, standalone = TRUE)  
+chic = xmlSVG({show(plot_chic)}, standalone = TRUE)  
+#p3 = xmlSVG({show(p3)}, standalone = TRUE)  
+
+slickR(list(binom,chic))+settings(dots=TRUE,autoplay = TRUE)
+
+
+```
+
+
+```{r}
+icm_stretch_cis[,stnd_dist:=distance/bait.length]
+
+
+plot_binom <- ggplot(icm_stretch_cis, aes(log(stnd_dist,base=10))) +
+    geom_density(alpha = 0.1)+theme_cowplot()+
+    scale_fill_viridis(name="Adj. P-value Bin",discrete=T)+
+    scale_colour_viridis(name="Adj. P-value Bin",discrete=T)+
+    geom_vline(xintercept=log(1,base=10), colour="grey") +
+    geom_vline(xintercept=log(120,base=10), colour="grey") +
+    annotate(x=log(3,base=10),y=.8,label="RNA Length",vjust=2,geom="label")+
+    annotate(x=log(400,base=10),y=.8,label="120x RNA Length",vjust=2,
+             geom="label")+
+    xlab("Log 10 Distance from Interaction to RNA of RNA Length")+
+  ggtitle("Binomial Model")
+
+
+plot_chic <- ggplot(merged_stretch_cis, aes(log(stnd_dist,base=10))) +
+    geom_density(alpha = 0.1)+theme_cowplot()+
+    scale_fill_viridis(name="Adj. P-value Bin",discrete=T)+
+    scale_colour_viridis(name="Adj. P-value Bin",discrete=T)+
+    geom_vline(xintercept=log(1,base=10), colour="grey") +
+    geom_vline(xintercept=log(120,base=10), colour="grey") +
+    annotate(x=log(3,base=10),y=.8,label="RNA Length",vjust=2,geom="label")+
+    annotate(x=log(400,base=10),y=.8,label="120x RNA Length",vjust=2,
+             geom="label")+
+    xlab("Log 10 Distance from Interaction to RNA of RNA Length")+
+  ggtitle("Chicane Model")
+
+binom = xmlSVG({show(plot_binom)}, standalone = TRUE)  
+chic = xmlSVG({show(plot_chic)}, standalone = TRUE)  
+#p3 = xmlSVG({show(p3)}, standalone = TRUE)  
+
+slickR(list(binom,chic))+settings(dots=TRUE,autoplay = TRUE)
+
+```
+
+
+
+
+
+```{r annotationPlots}
+icm_binom_all$interaction <- ifelse(is.na(icm_binom_all$distance),"trans","cis")
+output_counts <- icm_binom_all[, .N, by=.(interaction,gene_type.R,annotation.R)]
+output_counts[,all_N :=sum(N), by=.(interaction)]
+output_counts[,prop:=(N/all_N)]
+
+
+ggplot(output_counts,aes(x=annotation.R,y=prop,fill=annotation.R) )+
+    geom_bar(stat="identity")+
+    facet_wrap(~interaction)+
+    theme_cowplot()+
+    scale_fill_viridis(discrete=T)+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position="none")+
+    xlab("")+
+    ylab("Proportion ")
+```
+
+
+
+
+
+
+```{r,eval=FALSE,echo=FALSE}
 #making the plot of distribution of annotations
 MALAT1 <- merged_runs[merged_runs$bait_name %in% c("MALAT1","TALAM1"),]
+MALAT1 <- merged_runs[merged_runs$bait_name %in% c("Gm32647"),]
 MALAT1 <- MALAT1[,c("target.id","bait.id","count")]
 GAPDH <- merged_runs[merged_runs$bait_name=="GAPDH",]
 
@@ -692,24 +1073,15 @@ ggplot(annot_counts[annot_counts$signif=="significant",],aes(x=type,y=N,fill=typ
 
 
 #splitting the plot based on coding/nonCoding rna
-ComplexHeatmap::Heatmap(as.matrix(annot_counts[annot_counts$interaction=="cis",2:4] %>% spread(gene_biotype, N, fill = 0)),
-                        column_names_side = "bottom",
-                        cluster_rows = T,
-                        cluster_columns = F,
-                        column_names_rot = 45,
-                        column_names_gp = gpar(fontsize=7),
-                        row_names_gp = gpar(fontsize=6),
-                        row_names_rot = 0,
-                        name = " ",width = 4*unit(25,'mm'),
-                        column_title = "T-cell activation genes shRNA Ifn vs Dox")
+annot_counts[,all_N :=sum(N), by=.(type, signif)]
+annot_counts[,prop:=(N/all_N)]
 
-
-ggplot(annot_counts[annot_counts$interaction=="cis" & annot_counts$signif=="significant",],aes(x = gene_biotype,y = type))+
+ggplot(annot_counts[annot_counts$interaction=="cis" & annot_counts$signif=="TRUE",],aes(x = gene_biotype,y = type))+
   geom_tile(aes(fill=N))+
   geom_text(aes(label=N))+
   scale_fill_viridis()
 
-ggplot(annot_counts[annot_counts$signif=="significant",],aes(x = gene_biotype,y = type))+
+ggplot(annot_counts[annot_counts$signif=="TRUE",],aes(x = gene_biotype,y = type))+
     geom_tile(aes(fill=N))+
     geom_text(aes(label=N))+facet_wrap(~interaction)+
     scale_fill_viridis()
